@@ -21,7 +21,7 @@ public class CorsConfig {
         // Allow frontend URL
         config.addAllowedOrigin(frontendUrl);
         // Allow localhost with any port for development
-        config.addAllowedOrigin("http://localhost:5174");
+        config.addAllowedOrigin("http://localhost:5173");
         
         // Allow common HTTP methods
         config.addAllowedMethod("GET");

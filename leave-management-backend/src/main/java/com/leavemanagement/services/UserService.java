@@ -2,21 +2,48 @@ package com.leavemanagement.services;
 
 import com.leavemanagement.dtos.UserDTO;
 import com.leavemanagement.models.User;
+import com.leavemanagement.models.UserRole;
 import com.leavemanagement.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
 
-    public UserDTO getCurrentUser(String email) {
-        User user = userRepository.findByEmail(email)
+    public User getCurrentUser(OAuth2User principal) {
+        String email = principal.getAttribute("email");
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> createNewUser(principal));
+    }
+
+    private User createNewUser(OAuth2User principal) {
+        User user = new User();
+        user.setEmail(principal.getAttribute("email"));
+        user.setFullName(principal.getAttribute("name"));
+        user.setProfilePictureUrl(principal.getAttribute("picture"));
+        user.setRole(UserRole.STAFF); // Default role for new users
+        user.setLeaveBalance(0.0);
+        user.setCarryOverBalance(0.0);
+        return userRepository.save(user);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Transactional
+    public void updateUserRole(Long userId, UserRole newRole) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        return convertToDTO(user);
+        user.setRole(newRole);
+        userRepository.save(user);
     }
 
     @Transactional
@@ -25,7 +52,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    private UserDTO convertToDTO(User user) {
+    public UserDTO convertToDTO(User user) {
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
         dto.setFullName(user.getFullName());
