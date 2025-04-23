@@ -6,6 +6,7 @@ C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main
 C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\models\LeaveType.java
 C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\LeaveManagementApplication.java
 C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\repositories\LeaveRequestRepository.java
+C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\config\CorsConfig.java
 C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\dtos\LeaveBalanceDTO.java
 C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\dtos\LeaveRequestDTO.java
 C:\Users\educa\Desktop\Leave-Management-System\leave-management-backend\src\main\java\com\leavemanagement\models\LeaveStatus.java

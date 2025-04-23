@@ -1,28 +1,32 @@
 package com.leavemanagement.controllers;
 
-import com.leavemanagement.dtos.UserDTO;
-import com.leavemanagement.services.UserService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/auth")
-@RequiredArgsConstructor
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "${app.frontend.url}")
 public class AuthController {
-    private final UserService userService;
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login() {
-        // Simulated login - in real implementation, this would integrate with Microsoft Authenticator
-        System.out.println("User login attempt - Microsoft Authenticator integration required");
-        return ResponseEntity.ok("Login successful - Token would be returned here");
-    }
+    @Value("${spring.security.oauth2.client.registration.azure-dev.client-id}")
+    private String clientId;
 
-    @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser() {
-        // In real implementation, email would come from security context
-        String simulatedEmail = "user@example.com";
-        return ResponseEntity.ok(userService.getCurrentUser(simulatedEmail));
+    @Value("${app.oauth2.redirectUri}")
+    private String redirectUri;
+
+    @GetMapping("/microsoft/url")
+    public void redirectToMicrosoftLogin(HttpServletResponse response) throws IOException {
+        String baseUrl = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+        String scope = "openid profile email";
+
+        String authUrl = String.format("%s?client_id=%s&response_type=code&redirect_uri=%s&scope=%s&response_mode=query",
+                baseUrl, clientId, redirectUri, scope);
+
+        response.sendRedirect(authUrl);
     }
 }
