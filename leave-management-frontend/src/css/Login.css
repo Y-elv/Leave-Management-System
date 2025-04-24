@@ -8,34 +8,111 @@
   position: fixed;
   top: 0;
   left: 0;
+  background-color: #f5f5f5;
 }
 
 .login-box {
-  background: rgba(255, 255, 255, 0.95);
-  padding: 3rem 2rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 440px;
+  max-width: 400px;
   text-align: center;
-  backdrop-filter: blur(10px);
 }
 
 .title-section {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .title-section h1 {
-  color: #2d3748;
-  font-size: 2.2rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 0.5rem;
 }
 
 .title-section p {
-  color: #718096;
-  font-size: 1.1rem;
-  line-height: 1.5;
+  color: #666;
+  font-size: 1rem;
+}
+
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.login-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: #0078d4;
+}
+
+.password-group {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+}
+
+.password-toggle:hover {
+  color: #333;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.login-button:hover {
+  background-color: #006cbd;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ddd;
+}
+
+.divider span {
+  padding: 0 10px;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .microsoft-login-button {
@@ -61,6 +138,17 @@
 
 .microsoft-icon {
   font-size: 1.3rem;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: left;
+  border: 1px solid #ffcdd2;
 }
 
 @media (max-width: 480px) {

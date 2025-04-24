@@ -7,6 +7,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.List;
+
 @Configuration
 public class CorsConfig {
 
@@ -17,26 +19,15 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        
-        // Allow frontend URL
-        config.addAllowedOrigin(frontendUrl);
-        // Allow localhost with any port for development
-        config.addAllowedOrigin("http://localhost:5173");
-        
-        // Allow common HTTP methods
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE");
-        config.addAllowedMethod("OPTIONS");
-        
-        // Allow all headers
-        config.addAllowedHeader("*");
-        
-        // Allow credentials
+
         config.setAllowCredentials(true);
-        
+        config.setAllowedOrigins(List.of(frontendUrl, "http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
+
     }
 }

@@ -1,69 +1,119 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import LayoutDashboard from '../../components/LayoutDashboard';
 import { User } from '../../types/user';
+import '../../css/StaffDashboard.css';
 
-const StaffDashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+interface StaffDashboardProps {
+  user: User;
+}
+
+interface LeaveRequest {
+  id: number;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reason: string;
+}
+
+const StaffDashboard: React.FC<StaffDashboardProps> = ({ user }) => {
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchLeaveRequests = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('http://localhost:8083/api/users/me', {
-          credentials: 'include'
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8083/api/leaves/my-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
+        
         if (response.ok) {
           const data = await response.json();
-          setUser(data);
+          setLeaveRequests(data);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error fetching leave requests:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchLeaveRequests();
   }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return 'status-approved';
+      case 'REJECTED':
+        return 'status-rejected';
+      default:
+        return 'status-pending';
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
-    return <div>Error loading user data</div>;
-  }
-
   return (
-    <div className="dashboard-container">
-      <div className="user-info">
-        <img 
-          src={user.profilePictureUrl || '/default-avatar.png'} 
-          alt={user.fullName} 
-          className="profile-picture"
-        />
-        <div className="user-details">
-          <h2>{user.fullName}</h2>
-          <p>{user.email}</p>
-          <p>Role: Staff</p>
-        </div>
-      </div>
+    <LayoutDashboard role="STAFF">
+      <div className="dashboard-container">
+        <h1>Welcome, {user.fullName}</h1>
 
-      <div className="leave-balance">
-        <h3>Leave Balance</h3>
-        <div className="balance-details">
-          <div>
-            <p>Current Balance</p>
-            <h4>{user.leaveBalance} days</h4>
+        <div className="leave-balance-section">
+          <div className="balance-card">
+            <h3>Annual Leave Balance</h3>
+            <p className="balance-number">{user.leaveBalance} days</p>
           </div>
-          <div>
-            <p>Carry Forward</p>
-            <h4>{user.carryOverBalance} days</h4>
+          <div className="balance-card">
+            <h3>Carry Over Balance</h3>
+            <p className="balance-number">{user.carryOverBalance} days</p>
           </div>
         </div>
-      </div>
 
-      {/* Add more staff-specific features here */}
-    </div>
+        <div className="leave-history">
+          <h2>Leave History</h2>
+          <div className="leave-requests-list">
+            {leaveRequests.length === 0 ? (
+              <p>No leave requests found</p>
+            ) : (
+              leaveRequests.map((request) => (
+                <div key={request.id} className="leave-request-card">
+                  <div className="leave-request-header">
+                    <h4>{request.type}</h4>
+                    <span className={`status-badge ${getStatusColor(request.status)}`}>
+                      {request.status}
+                    </span>
+                  </div>
+                  <div className="leave-request-details">
+                    <p>From: {new Date(request.startDate).toLocaleDateString()}</p>
+                    <p>To: {new Date(request.endDate).toLocaleDateString()}</p>
+                    <p>Reason: {request.reason}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="quick-actions">
+          <h2>Quick Actions</h2>
+          <div className="action-buttons">
+            <button className="action-button">
+              Request Leave
+            </button>
+            <button className="action-button">
+              View Calendar
+            </button>
+          </div>
+        </div>
+      </div>
+    </LayoutDashboard>
   );
 };
 

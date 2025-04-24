@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { User, UserRole } from '../types/user';
 
 interface ProtectedRouteProps {
@@ -8,25 +8,19 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, user, allowedRoles }: ProtectedRouteProps) => {
-  if (!user) {
-    // Not logged in, redirect to login page
-    return <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  if (!user || !localStorage.getItem('token')) {
+    // Not logged in or no valid token, redirect to login page with return URL
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // User's role is not authorized, redirect to appropriate dashboard
-    switch (user.role) {
-      case 'STAFF':
-        return <Navigate to="/dashboard/staff" replace />;
-      case 'MANAGER':
-        return <Navigate to="/dashboard/manager" replace />;
-      case 'ADMIN':
-        return <Navigate to="/dashboard/admin" replace />;
-      default:
-        return <Navigate to="/login" replace />;
-    }
+  if (allowedRoles && !allowedRoles.includes(user.role as UserRole)) {
+    // User's role is not authorized, redirect to their appropriate dashboard
+    return <Navigate to={`/dashboard/${user.role.toLowerCase()}`} replace />;
   }
 
+  // Render children only if user exists and has correct role
   return <>{children}</>;
 };
 

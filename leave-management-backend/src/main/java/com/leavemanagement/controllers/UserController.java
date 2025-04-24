@@ -1,5 +1,6 @@
 package com.leavemanagement.controllers;
 
+import com.leavemanagement.dtos.UserDTO;
 import com.leavemanagement.models.User;
 import com.leavemanagement.models.UserRole;
 import com.leavemanagement.services.UserService;
@@ -20,15 +21,34 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {
-        User user = userService.getCurrentUser(principal);
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        UserDTO user = userService.getCurrentUserDTO();
         return ResponseEntity.ok(user);
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserDTO> getUserByEmail(
+            @PathVariable String email,
+            @AuthenticationPrincipal OAuth2User principal
+    ) {
+        // Only ADMIN can view other users by email
+        User currentUser = userService.getCurrentUser();
+        if (currentUser.getRole() != UserRole.ADMIN) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        try {
+            User user = userService.getUserByEmail(email);
+            return ResponseEntity.ok(userService.convertToDTO(user));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
         // Only ADMIN can view all users
-        User currentUser = userService.getCurrentUser(principal);
+        User currentUser = userService.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN) {
             return ResponseEntity.status(403).build();
         }
@@ -38,11 +58,10 @@ public class UserController {
     @PutMapping("/{userId}/role")
     public ResponseEntity<?> updateUserRole(
             @PathVariable Long userId,
-            @RequestBody Map<String, String> roleUpdate,
-            @AuthenticationPrincipal OAuth2User principal
+            @RequestBody Map<String, String> roleUpdate
     ) {
         // Only ADMIN can update roles
-        User currentUser = userService.getCurrentUser(principal);
+        User currentUser = userService.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN) {
             return ResponseEntity.status(403).build();
         }

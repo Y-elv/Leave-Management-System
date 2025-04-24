@@ -1,16 +1,18 @@
 package com.leavemanagement.controllers;
 
+import com.leavemanagement.dtos.LoginRequest;
+import com.leavemanagement.dtos.LoginResponse;
+import com.leavemanagement.services.AuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "${app.frontend.url}")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AuthController {
 
     @Value("${spring.security.oauth2.client.registration.azure-dev.client-id}")
@@ -18,6 +20,17 @@ public class AuthController {
 
     @Value("${app.oauth2.redirectUri}")
     private String redirectUri;
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authService.login(loginRequest));
+    }
 
     @GetMapping("/microsoft/url")
     public void redirectToMicrosoftLogin(HttpServletResponse response) throws IOException {

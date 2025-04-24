@@ -7,6 +7,8 @@ import com.leavemanagement.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +36,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(this::convertToDTO)
+                .toList();
     }
 
     @Transactional
@@ -62,5 +67,20 @@ public class UserService {
         dto.setLeaveBalance(user.getLeaveBalance());
         dto.setCarryOverBalance(user.getCarryOverBalance());
         return dto;
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+    }
+
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return getUserByEmail(email);
+    }
+
+    public UserDTO getCurrentUserDTO() {
+        return convertToDTO(getCurrentUser());
     }
 }

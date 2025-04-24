@@ -18,6 +18,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column
+    private String password;  // Making password nullable for Microsoft auth users
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
@@ -32,4 +35,5 @@ public class User {
 
     @Column(nullable = false)
     private double carryOverBalance = 0.0;
+
 }
