@@ -8,7 +8,7 @@ import OAuthCallback from './pages/OAuthCallback'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoadingSpinner from './components/LoadingSpinner'
 import { User } from './types/user'
-import { API_ENDPOINTS, getAuthHeaders } from './config/api'
+import { API_BASE_URL, getAuthHeaders } from './config/api'
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -30,7 +30,7 @@ const App = () => {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         try {
-          const response = await fetch(API_ENDPOINTS.ME, {
+          const response = await fetch(`${API_BASE_URL}/api/users/me`, {
             headers: getAuthHeaders(token),
             credentials: 'include',
             signal: controller.signal

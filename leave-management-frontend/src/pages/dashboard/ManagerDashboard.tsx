@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LayoutDashboard from '../../components/LayoutDashboard';
 import { User } from '../../types/user';
+import { API_BASE_URL } from '../../config/api';
 
 interface ManagerDashboardProps {
   user: User;
@@ -23,7 +24,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8083/api/users/team', {
+        const response = await fetch(`${API_BASE_URL}/api/users/team`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

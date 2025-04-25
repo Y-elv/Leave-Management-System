@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LayoutDashboard from '../../components/LayoutDashboard';
 import { User, UserRole } from '../../types/user';
+import { API_BASE_URL } from '../../config/api';
 
 interface AdminDashboardProps {
   user: User;
@@ -25,7 +26,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8083/api/users', {
+        const response = await fetch(`${API_BASE_URL}/api/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -48,7 +49,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const handleRoleUpdate = async (userId: number, newRole: UserRole) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8083/api/users/${userId}/role`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

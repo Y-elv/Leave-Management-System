@@ -4,7 +4,7 @@ import { faMicrosoft } from '@fortawesome/free-brands-svg-icons'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react'
 import ToastContainer, { useToast } from '../components/ToastContainer'
-import { API_ENDPOINTS } from '../config/api'
+import { API_BASE_URL} from '../config/api'
 import '../css/Login.css'
 
 const Login = () => {
@@ -15,7 +15,7 @@ const Login = () => {
   const { toasts, addToast, removeToast } = useToast();
 
   const handleMicrosoftLogin = () => {
-    window.location.href = API_ENDPOINTS.MICROSOFT_LOGIN;
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/azure-dev`;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +28,7 @@ const Login = () => {
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
-        const response = await fetch(API_ENDPOINTS.LOGIN, {
+        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
