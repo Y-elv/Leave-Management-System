@@ -40,7 +40,7 @@ cd leave-management-backend
 ./mvnw spring-boot:run
 ```
 
-The backend will be available at http://localhost:8083
+The backend will be available at https://leave-management-system-6cab.onrender.com
 
 ### Start the Frontend
 
@@ -50,14 +50,14 @@ npm install    # or yarn install
 npm run dev    # or yarn dev
 ```
 
-The frontend will be available at http://localhost:5174
+The frontend will be available at https://leave-manage.netlify.app
 
 ## Authentication
 
 The application uses Azure AD for authentication with the following flow:
 1. Frontend initiates auth via '/oauth2/authorization/azure-dev'
 2. Backend handles the OAuth2 flow
-3. Redirect URI: http://localhost:8083/login/oauth2/code/azure-dev
+3. Redirect URI: https://leave-management-system-6cab.onrender.com/login/oauth2/code/azure-dev
 
 ## Additional Information
 
