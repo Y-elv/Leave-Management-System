@@ -49,7 +49,7 @@ public class LeaveService {
     public LeaveRequestDTO approveLeaveRequest(Long requestId, String approverEmail, boolean approved, String comments) {
         User approver = userRepository.findByEmail(approverEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Approver not found"));
-        
+
         if (approver.getRole() != UserRole.MANAGER && approver.getRole() != UserRole.ADMIN) {
             throw new IllegalStateException("User not authorized to approve leave requests");
         }
@@ -63,14 +63,28 @@ public class LeaveService {
         if (approved) {
             double daysToDeduct = leaveRequest.getNumberOfDays();
             User requestingUser = leaveRequest.getUser();
-            if (requestingUser.getLeaveBalance() < daysToDeduct) {
+
+            double totalAvailable = requestingUser.getLeaveBalance() + requestingUser.getCarryOverBalance();
+
+            if (totalAvailable < daysToDeduct) {
                 throw new IllegalStateException("Insufficient leave balance");
             }
-            userService.updateLeaveBalance(requestingUser, -daysToDeduct);
+
+            // Deduct first from carryOverBalance if available
+            if (requestingUser.getCarryOverBalance() >= daysToDeduct) {
+                requestingUser.setCarryOverBalance(requestingUser.getCarryOverBalance() - daysToDeduct);
+            } else {
+                double remaining = daysToDeduct - requestingUser.getCarryOverBalance();
+                requestingUser.setCarryOverBalance(0.0);
+                requestingUser.setLeaveBalance(requestingUser.getLeaveBalance() - remaining);
+            }
+
+            userRepository.save(requestingUser);
         }
 
         return convertToDTO(leaveRequestRepository.save(leaveRequest));
     }
+
 
     public List<LeaveRequestDTO> getUserLeaveHistory(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
@@ -129,6 +143,10 @@ public class LeaveService {
         }
 
         double requestedDays = calculateWorkingDays(leaveRequestDTO.getStartDate(), leaveRequestDTO.getEndDate());
+
+        System.out.println("User available balance: " + user.getLeaveBalance());
+        System.out.println("Requested days: " + requestedDays);
+
         if (user.getLeaveBalance() + user.getCarryOverBalance() < requestedDays) {
             throw new IllegalStateException("Insufficient leave balance");
         }

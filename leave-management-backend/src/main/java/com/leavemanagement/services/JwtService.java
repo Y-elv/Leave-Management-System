@@ -71,4 +71,8 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public String extractEmail(String token) {
+        return extractAllClaims(token).getSubject();
+    }
 }

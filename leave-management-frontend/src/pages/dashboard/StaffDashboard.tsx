@@ -26,13 +26,14 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ user }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/leaves/my-requests`, {
+        const response = await fetch(`${API_BASE_URL}/api/leave`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         if (response.ok) {
+          console.log('Leave requests response:', response);
           const data = await response.json();
           setLeaveRequests(data);
         }

@@ -31,7 +31,7 @@ public class User {
     private List<LeaveRequest> leaveRequests;
 
     @Column(nullable = false)
-    private double leaveBalance = 0.0;
+    private double leaveBalance = 20.0;
 
     @Column(nullable = false)
     private double carryOverBalance = 0.0;
