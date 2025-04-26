@@ -29,11 +29,12 @@ const App = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+        
         try {
-          const response = await fetch(`${API_BASE_URL}/api/users/me`, {
-            headers: getAuthHeaders(token),
-            credentials: 'include',
-            signal: controller.signal
+            const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           });
            
           if (response.ok) {
@@ -42,7 +43,6 @@ const App = () => {
             setAuthError(false);
           } else {
             console.log('Invalid token or session expired');
-            localStorage.removeItem('token');
             setAuthError(true);
           }
         } finally {

@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, user, allowedRoles }: ProtectedRouteProps) => {
   const location = useLocation();
 
-  if (!user || !localStorage.getItem('token')) {
+  if (!user || !user.id || !localStorage.getItem('token')) {
     // Not logged in or no valid token, redirect to login page with return URL
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

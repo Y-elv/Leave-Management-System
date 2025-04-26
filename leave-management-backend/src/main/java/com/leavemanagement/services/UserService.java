@@ -4,8 +4,10 @@ import com.leavemanagement.dtos.UserDTO;
 import com.leavemanagement.models.User;
 import com.leavemanagement.models.UserRole;
 import com.leavemanagement.repositories.UserRepository;
+import com.leavemanagement.utils.JwtTokenUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,6 +19,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
     private final UserRepository userRepository;
 
     public User getCurrentUser(OAuth2User principal) {
@@ -82,5 +87,14 @@ public class UserService {
 
     public UserDTO getCurrentUserDTO() {
         return convertToDTO(getCurrentUser());
+    }
+
+    public User getUserFromToken(String token) {
+        try {
+            String email = jwtTokenUtil.getEmailFromToken(token);
+            return getUserByEmail(email);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

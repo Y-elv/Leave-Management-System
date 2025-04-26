@@ -24,16 +24,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ user }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_BASE_URL}/api/users/team`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setTeamMembers(data);
-        }
+        console.log("am in manager dashboard"); 
+        console.log(token); 
       } catch (error) {
         console.error('Error fetching team members:', error);
       } finally {

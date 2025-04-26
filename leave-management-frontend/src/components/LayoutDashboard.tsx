@@ -34,12 +34,26 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
   const navigate = useNavigate();
   const location = useLocation();
 
+  const getUserFromToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+  
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+      return decodedPayload;
+    } catch (error) {
+      console.error('Failed to decode token', error);
+      return null;
+    }
+  };
+  
+
   // Get user data from localStorage
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = getUserFromToken();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -174,10 +188,12 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
               placement="bottomRight"
             >
               <div className="user-section">
-                <div className="user-avatar">
-                  {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
-                </div>
-                <span className="user-name">{user.fullName}</span>
+              <div className="user-avatar">
+                 {user.fullName
+                  ? user.fullName.split(' ').map((word: any[]) => word[0]).join('').toUpperCase()
+                  : 'User'}
+              </div>
+
                 <IoMdArrowDropdown size={20} />
               </div>
             </Dropdown>

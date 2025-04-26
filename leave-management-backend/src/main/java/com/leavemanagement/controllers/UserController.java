@@ -21,10 +21,29 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser() {
-        UserDTO user = userService.getCurrentUserDTO();
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserDTO> getCurrentUser(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // Extract token from Authorization header
+            String token = null;
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                token = authorizationHeader.substring(7);
+            } else {
+                return ResponseEntity.status(401).build(); // No token provided
+            }
+
+            // Get user from token
+            User user = userService.getUserFromToken(token);
+
+            if (user == null) {
+                return ResponseEntity.status(401).build(); // Token invalid
+            }
+
+            return ResponseEntity.ok(userService.convertToDTO(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build(); // Some other error
+        }
     }
+
 
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(
@@ -74,4 +93,30 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid role");
         }
     }
+
+    @GetMapping("/token-info")
+    public ResponseEntity<UserDTO> getUserByToken(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // Extract token from Authorization header (typically in format "Bearer token")
+            String token = null;
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                token = authorizationHeader.substring(7);
+            } else {
+                return ResponseEntity.status(401).build();
+            }
+
+            // Validate the token and get user information
+            // This implementation depends on how your token validation works
+            User user = userService.getUserFromToken(token);
+
+            if (user == null) {
+                return ResponseEntity.status(401).build();
+            }
+
+            return ResponseEntity.ok(userService.convertToDTO(user));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).build();
+        }
+    }
+
 }
