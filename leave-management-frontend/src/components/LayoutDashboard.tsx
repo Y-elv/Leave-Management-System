@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Button, Tooltip, Input, Dropdown } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CloseOutlined,
 } from '@ant-design/icons';
-import { IoMdNotificationsOutline } from 'react-icons/io';
+import { IoMdNotificationsOutline, IoMdArrowDropdown } from 'react-icons/io';
 import { CiSettings } from 'react-icons/ci';
-import { IoMdArrowDropdown } from 'react-icons/io';
 import { FaUserCircle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import { BsCalendarCheck } from 'react-icons/bs';
+import AdminDashboardContent from '../components/AdminDashboardContent';
 import '../css/LayoutDashboard.css';
 
 const { Header, Sider, Content } = Layout;
@@ -20,24 +19,21 @@ interface MenuItem {
   key: string;
   label: string;
   icon: React.ReactNode;
-  path: string;
+  content: React.ReactNode;
 }
 
 interface LayoutDashboardProps {
-  children: React.ReactNode;
   role: 'ADMIN' | 'MANAGER' | 'STAFF';
 }
 
-const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => {
+const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [activeKey, setActiveKey] = useState<string>('dashboard');
 
   const getUserFromToken = () => {
     const token = localStorage.getItem('token');
     if (!token) return null;
-  
     try {
       const payloadBase64 = token.split('.')[1];
       const decodedPayload = JSON.parse(atob(payloadBase64));
@@ -47,14 +43,12 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
       return null;
     }
   };
-  
 
-  // Get user data from localStorage
   const user = getUserFromToken();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   const dropdownItems = [
@@ -63,31 +57,31 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
     { key: '3', label: 'Logout', onClick: handleLogout },
   ];
 
-  // Base menu items for all roles
+  // Base menu items with content
   const baseMenuItems: MenuItem[] = [
     {
       key: 'dashboard',
       label: 'Dashboard',
       icon: <MdDashboard size={20} />,
-      path: `/dashboard/${role.toLowerCase()}`,
+      content: <AdminDashboardContent user={user} />,
     },
     {
       key: 'leave-requests',
       label: 'Leave Requests',
       icon: <BsCalendarCheck size={20} />,
-      path: `/dashboard/${role.toLowerCase()}/leave-requests`,
+      content: <div>Here are your Leave Requests.</div>,
     },
     {
       key: 'notifications',
       label: 'Notifications',
       icon: <IoMdNotificationsOutline size={20} />,
-      path: `/dashboard/${role.toLowerCase()}/notifications`,
+      content: <div>You have new Notifications.</div>,
     },
     {
       key: 'settings',
       label: 'Settings',
       icon: <CiSettings size={20} />,
-      path: `/dashboard/${role.toLowerCase()}/settings`,
+      content: <div>Update your Settings here.</div>,
     },
   ];
 
@@ -98,7 +92,7 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
         key: 'users',
         label: 'User Management',
         icon: <FaUserCircle size={20} />,
-        path: '/dashboard/admin/users',
+        content: <div>Manage Users here (Admin Only).</div>,
       },
     ],
     MANAGER: [
@@ -106,20 +100,19 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
         key: 'team',
         label: 'Team Management',
         icon: <FaUserCircle size={20} />,
-        path: '/dashboard/manager/team',
+        content: <div>Manage your Team here (Manager Only).</div>,
       },
     ],
     STAFF: [],
   };
 
-  // Combine base menu items with role-specific items
   const menuItems = [...baseMenuItems, ...(roleSpecificMenuItems[role] || [])];
 
-  const isActive = (path: string) => location.pathname === path;
-
-  const handleMenuClick = (path: string) => {
-    navigate(path);
+  const handleMenuClick = (key: string) => {
+    setActiveKey(key);
   };
+
+  const activeContent = menuItems.find(item => item.key === activeKey)?.content || <div>Page not found</div>;
 
   return (
     <Layout className="layout-container">
@@ -130,16 +123,16 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
 
         <div className="menu-container">
           {menuItems.map((item) => (
-            <Tooltip 
-              key={item.key} 
-              title={collapsed ? item.label : ''} 
+            <Tooltip
+              key={item.key}
+              title={collapsed ? item.label : ''}
               placement="right"
             >
               <div
-                className={`menu-item ${isActive(item.path) ? 'active' : ''}`}
-                onClick={() => handleMenuClick(item.path)}
+                className={`menu-item ${activeKey === item.key ? 'active' : ''}`}
+                onClick={() => handleMenuClick(item.key)}
               >
-                <div className={`icon-wrapper ${isActive(item.path) ? 'active' : ''}`}>
+                <div className={`icon-wrapper ${activeKey === item.key ? 'active' : ''}`}>
                   {item.icon}
                 </div>
                 {!collapsed && <span className="label">{item.label}</span>}
@@ -188,12 +181,11 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
               placement="bottomRight"
             >
               <div className="user-section">
-              <div className="user-avatar">
-                 {user.fullName
-                  ? user.fullName.split(' ').map((word: any[]) => word[0]).join('').toUpperCase()
-                  : 'User'}
-              </div>
-
+                <div className="user-avatar">
+                  {user?.fullName
+                    ? user.fullName.split(' ').map((word: string) => word[0]).join('').toUpperCase()
+                    : 'User'}
+                </div>
                 <IoMdArrowDropdown size={20} />
               </div>
             </Dropdown>
@@ -201,7 +193,7 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ children, role }) => 
         </Header>
 
         <Content className="content">
-          {children}
+          {activeContent}
         </Content>
       </Layout>
     </Layout>

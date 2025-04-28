@@ -1,8 +1,10 @@
 package com.leavemanagement.controllers;
 
+import com.leavemanagement.dtos.ChangeRoleDTO;
 import com.leavemanagement.dtos.UserDTO;
 import com.leavemanagement.models.User;
 import com.leavemanagement.models.UserRole;
+import com.leavemanagement.services.JwtService;
 import com.leavemanagement.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private JwtService jwtService;
 
     @GetMapping("/me")
     public ResponseEntity<UserDTO> getCurrentUser(@RequestHeader("Authorization") String authorizationHeader) {
@@ -65,34 +69,25 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        // Only ADMIN can view all users
-        User currentUser = userService.getCurrentUser();
-        if (currentUser.getRole() != UserRole.ADMIN) {
-            return ResponseEntity.status(403).build();
-        }
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
+    public ResponseEntity<List<UserDTO>> getAllUsers(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = extractToken(authorizationHeader);
+        User currentUser = userService.getUserFromToken(token);
 
-    @PutMapping("/{userId}/role")
-    public ResponseEntity<?> updateUserRole(
-            @PathVariable Long userId,
-            @RequestBody Map<String, String> roleUpdate
-    ) {
-        // Only ADMIN can update roles
-        User currentUser = userService.getCurrentUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         if (currentUser.getRole() != UserRole.ADMIN) {
             return ResponseEntity.status(403).build();
         }
 
-        try {
-            UserRole newRole = UserRole.valueOf(roleUpdate.get("role"));
-            userService.updateUserRole(userId, newRole);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid role");
-        }
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
+
+
+
+
 
     @GetMapping("/token-info")
     public ResponseEntity<UserDTO> getUserByToken(@RequestHeader("Authorization") String authorizationHeader) {
@@ -118,5 +113,35 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
     }
+
+    @PutMapping("/{userId}/change-role")
+    public ResponseEntity<UserDTO> changeUserRole(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @PathVariable Long userId,
+            @RequestBody ChangeRoleDTO roleDto) {
+
+        String token = extractToken(authorizationHeader);
+        String requesterEmail = jwtService.extractEmail(token);
+
+        // Convert String to Enum
+        UserRole roleEnum;
+        try {
+            roleEnum = UserRole.valueOf(roleDto.getRole().toUpperCase());  // Convert safely
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid role value: " + roleDto.getRole());
+        }
+
+        UserDTO updatedUser = userService.changeUserRole(userId, requesterEmail, roleEnum);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+
+    private String extractToken(String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        throw new IllegalArgumentException("Invalid Authorization header");
+    }
+
 
 }

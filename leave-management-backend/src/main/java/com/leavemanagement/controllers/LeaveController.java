@@ -1,5 +1,6 @@
 package com.leavemanagement.controllers;
 
+import com.leavemanagement.dtos.ApproveLeaveRequestDTO;
 import com.leavemanagement.dtos.LeaveBalanceDTO;
 import com.leavemanagement.dtos.LeaveRequestDTO;
 import com.leavemanagement.services.JwtService;
@@ -40,16 +41,17 @@ public class LeaveController {
         return ResponseEntity.ok(leaveService.submitLeaveRequest(userEmail, leaveRequestDTO));
     }
 
-    @PostMapping("/{id}/approve")
+    @PutMapping("/{id}/approve")
     public ResponseEntity<LeaveRequestDTO> approveLeaveRequest(
             @RequestHeader("Authorization") String authorizationHeader,
             @PathVariable Long id,
-            @RequestParam boolean approved,
-            @RequestParam(required = false) String comments) {
+            @RequestBody ApproveLeaveRequestDTO approveRequest) {
+
         String token = extractToken(authorizationHeader);
         String approverEmail = jwtService.extractEmail(token);
-        return ResponseEntity.ok(leaveService.approveLeaveRequest(id, approverEmail, approved, comments));
+        return ResponseEntity.ok(leaveService.approveLeaveRequest(id, approverEmail, approveRequest.isApproved(), approveRequest.getApproverComments()));
     }
+
 
     private String extractToken(String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {

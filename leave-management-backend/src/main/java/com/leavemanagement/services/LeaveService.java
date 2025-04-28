@@ -46,7 +46,7 @@ public class LeaveService {
     }
 
     @Transactional
-    public LeaveRequestDTO approveLeaveRequest(Long requestId, String approverEmail, boolean approved, String comments) {
+    public LeaveRequestDTO approveLeaveRequest(Long requestId, String approverEmail, boolean approved, String approverComments) {
         User approver = userRepository.findByEmail(approverEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Approver not found"));
 
@@ -57,32 +57,33 @@ public class LeaveService {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Leave request not found"));
 
+        // Set status based on approval
         leaveRequest.setStatus(approved ? LeaveStatus.APPROVED : LeaveStatus.REJECTED);
-        leaveRequest.setApproverComments(comments);
+        leaveRequest.setApproverComments(approverComments);
 
         if (approved) {
-            double daysToDeduct = leaveRequest.getNumberOfDays();
             User requestingUser = leaveRequest.getUser();
-
+            double daysToDeduct = leaveRequest.getNumberOfDays();
             double totalAvailable = requestingUser.getLeaveBalance() + requestingUser.getCarryOverBalance();
 
             if (totalAvailable < daysToDeduct) {
                 throw new IllegalStateException("Insufficient leave balance");
             }
 
-            // Deduct first from carryOverBalance if available
+            // Deduct from carryOverBalance first
             if (requestingUser.getCarryOverBalance() >= daysToDeduct) {
                 requestingUser.setCarryOverBalance(requestingUser.getCarryOverBalance() - daysToDeduct);
             } else {
-                double remaining = daysToDeduct - requestingUser.getCarryOverBalance();
+                double remainingDays = daysToDeduct - requestingUser.getCarryOverBalance();
                 requestingUser.setCarryOverBalance(0.0);
-                requestingUser.setLeaveBalance(requestingUser.getLeaveBalance() - remaining);
+                requestingUser.setLeaveBalance(requestingUser.getLeaveBalance() - remainingDays);
             }
 
             userRepository.save(requestingUser);
         }
 
-        return convertToDTO(leaveRequestRepository.save(leaveRequest));
+        LeaveRequest updatedLeaveRequest = leaveRequestRepository.save(leaveRequest);
+        return convertToDTO(updatedLeaveRequest);
     }
 
 

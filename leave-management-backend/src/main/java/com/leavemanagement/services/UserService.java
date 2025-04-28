@@ -49,14 +49,6 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUserRole(Long userId, UserRole newRole) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        user.setRole(newRole);
-        userRepository.save(user);
-    }
-
-    @Transactional
     public void updateLeaveBalance(User user, double daysToAdd) {
         user.setLeaveBalance(user.getLeaveBalance() + daysToAdd);
         userRepository.save(user);
@@ -97,4 +89,28 @@ public class UserService {
             return null;
         }
     }
+
+    @Transactional
+    public UserDTO changeUserRole(Long userId, String requesterEmail, UserRole role) {
+        // Find the requester (who is trying to change role)
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Requester not found"));
+
+        // Only Admins are allowed
+        if (requester.getRole() != UserRole.ADMIN) {
+            throw new IllegalStateException("Only admins can change user roles");
+        }
+
+        // Find the target user
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User to update not found"));
+
+        // Update the user's role
+        user.setRole(role);
+
+        // Save and return updated user
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
+
 }
