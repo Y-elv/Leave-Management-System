@@ -2,15 +2,18 @@ package com.leavemanagement.services;
 
 import com.leavemanagement.dtos.LeaveBalanceDTO;
 import com.leavemanagement.dtos.LeaveRequestDTO;
+import com.leavemanagement.dtos.UserDTO;
 import com.leavemanagement.models.*;
 import com.leavemanagement.repositories.LeaveRequestRepository;
 import com.leavemanagement.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -22,6 +25,10 @@ public class LeaveService {
     private final LeaveRequestRepository leaveRequestRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+
+    @Autowired
+    private EmailService emailService;
+
 
     private static final double MONTHLY_ACCRUAL_RATE = 1.66;
     private static final int MAX_CARRY_OVER_DAYS = 5;
@@ -57,12 +64,14 @@ public class LeaveService {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("Leave request not found"));
 
-        // Set status based on approval
         leaveRequest.setStatus(approved ? LeaveStatus.APPROVED : LeaveStatus.REJECTED);
         leaveRequest.setApproverComments(approverComments);
 
+        User requestingUser = leaveRequest.getUser(); // Email recipient
+        String subject;
+        String body;
+
         if (approved) {
-            User requestingUser = leaveRequest.getUser();
             double daysToDeduct = leaveRequest.getNumberOfDays();
             double totalAvailable = requestingUser.getLeaveBalance() + requestingUser.getCarryOverBalance();
 
@@ -70,7 +79,6 @@ public class LeaveService {
                 throw new IllegalStateException("Insufficient leave balance");
             }
 
-            // Deduct from carryOverBalance first
             if (requestingUser.getCarryOverBalance() >= daysToDeduct) {
                 requestingUser.setCarryOverBalance(requestingUser.getCarryOverBalance() - daysToDeduct);
             } else {
@@ -80,7 +88,18 @@ public class LeaveService {
             }
 
             userRepository.save(requestingUser);
+
+            subject = "Leave Request Approved";
+            body = "Dear " + requestingUser.getFullName() + ",\n\nYour leave request has been approved.\n\n" +
+                    "Comments: " + approverComments + "\n\nRegards,\n" + approver.getFullName();
+        } else {
+            subject = "Leave Request Rejected";
+            body = "Dear " + requestingUser.getFullName() + ",\n\nYour leave request has been rejected.\n\n" +
+                    "Comments: " + approverComments + "\n\nRegards,\n" + approver.getFullName();
         }
+
+        // Send the email
+        emailService.sendSimpleEmail(requestingUser.getEmail(), subject, body);
 
         LeaveRequest updatedLeaveRequest = leaveRequestRepository.save(leaveRequest);
         return convertToDTO(updatedLeaveRequest);
@@ -175,6 +194,89 @@ public class LeaveService {
         dto.setApproverComments(leaveRequest.getApproverComments());
         dto.setNumberOfDays(leaveRequest.getNumberOfDays());
         dto.setSubmissionDate(leaveRequest.getSubmissionDate());
+
+        if (leaveRequest.getUser() != null) {
+            UserDTO userDTO = new UserDTO();
+            userDTO.setId(leaveRequest.getUser().getId());
+            userDTO.setEmail(leaveRequest.getUser().getEmail());
+            userDTO.setFullName(leaveRequest.getUser().getFullName());
+            userDTO.setRole(leaveRequest.getUser().getRole());
+            userDTO.setLeaveBalance(leaveRequest.getUser().getLeaveBalance());
+            dto.setUser(userDTO);
+        }
+
         return dto;
     }
+
+    @Transactional(readOnly = true)
+    public List<LeaveRequestDTO> getAllLeaveRequests(String requesterEmail) {
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (requester.getRole() != UserRole.MANAGER && requester.getRole() != UserRole.ADMIN) {
+            throw new IllegalStateException("Only MANAGER or ADMIN can view all leave requests");
+        }
+
+        List<LeaveRequest> leaveRequests = leaveRequestRepository.findAll();
+        return leaveRequests.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<LeaveRequest> getLeaves(LeaveStatus status, LeaveType leaveType) {
+        if (status != null && leaveType != null) {
+            return leaveRequestRepository.findByStatusAndLeaveType(status, leaveType);
+        } else if (status != null) {
+            return leaveRequestRepository.findByStatus(status);
+        } else if (leaveType != null) {
+            return leaveRequestRepository.findByLeaveType(leaveType);
+        } else {
+            return leaveRequestRepository.findAll();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportLeaveRequests(String status, String leaveType) {
+        List<LeaveRequest> leaveRequests = leaveRequestRepository.findAll(); // Fetch all first
+
+        // Filter if status is given
+        if (status != null) {
+            leaveRequests = leaveRequests.stream()
+                    .filter(lr -> lr.getStatus().name().equalsIgnoreCase(status))
+                    .toList();
+        }
+
+        // Filter if leaveType is given
+        if (leaveType != null) {
+            leaveRequests = leaveRequests.stream()
+                    .filter(lr -> lr.getLeaveType().name().equalsIgnoreCase(leaveType))
+                    .toList();
+        }
+
+        // Build CSV
+        StringBuilder csvBuilder = new StringBuilder();
+        csvBuilder.append("Employee Name,Start Date,End Date,Status,Leave Type,Comments\n");
+
+        for (LeaveRequest leave : leaveRequests) {
+            csvBuilder.append(escapeCsv(leave.getUser().getFullName())).append(",");
+            csvBuilder.append(leave.getStartDate()).append(",");
+            csvBuilder.append(leave.getEndDate()).append(",");
+            csvBuilder.append(leave.getStatus()).append(",");
+            csvBuilder.append(leave.getLeaveType()).append(",");
+            csvBuilder.append(escapeCsv(leave.getApproverComments() == null ? "" : leave.getApproverComments()));
+            csvBuilder.append("\n");
+        }
+
+        return csvBuilder.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String escapeCsv(String value) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            value = value.replace("\"", "\"\"");
+            return "\"" + value + "\"";
+        }
+        return value;
+    }
+
+
 }

@@ -1,0 +1,131 @@
+.settings-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 24px;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .settings-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  
+  .settings-icon {
+    color: #1890ff;
+  }
+  
+  .settings-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  
+  .settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .settings-field {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .settings-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 6px;
+  }
+  
+  .settings-input {
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border 0.3s;
+  }
+  
+  .settings-input:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+  
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+  }
+  
+  .toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .toggle-track {
+    background-color: #ccc;
+    border-radius: 9999px;
+    width: 100%;
+    height: 100%;
+    transition: background-color 0.3s;
+    position: relative;
+  }
+  
+  .toggle-thumb {
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+  }
+  
+  /* Move thumb when checked */
+  .toggle-input:checked + .toggle-track {
+    background-color: #2563eb; /* Tailwind's blue-600 */
+  }
+  
+  .toggle-input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(24px);
+  }
+  
+  
+  .settings-save-button {
+    padding: 12px;
+    font-size: 16px;
+    background-color: #1890ff;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .settings-save-button:hover {
+    background-color: #1890ff;
+  }
+  
+  .settings-save-button:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  .settings-save-button:disabled:hover {
+    background-color: #9ca3af;
+  }

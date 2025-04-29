@@ -1,0 +1,50 @@
+.manager-dashboard-container {
+    padding: 20px;
+  }
+  
+  .manager-dashboard-box {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .leave-request-card {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .approve-button {
+    background-color: #4caf50;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .reject-button {
+    background-color: #f44336;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .approve-button:disabled,
+  .reject-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  

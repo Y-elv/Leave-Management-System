@@ -10,8 +10,17 @@ import { CiSettings } from 'react-icons/ci';
 import { FaUserCircle } from 'react-icons/fa';
 import { MdDashboard } from 'react-icons/md';
 import { BsCalendarCheck } from 'react-icons/bs';
+import { BiDownload } from 'react-icons/bi';
 import AdminDashboardContent from '../components/AdminDashboardContent';
 import '../css/LayoutDashboard.css';
+import UserManagement from './UserManagement';
+import ManagerDashboardContent from './ManagerDashboardContent';
+import StaffDashboardContent from './StaffDashboardContent';
+import LeaveRequest from './LeaveRequest';
+import ExportLeaveReports from './ExportLeaveReports';
+import Notifications from './Notifications';
+import Settings from './Settings';
+import TeamManagement from './TeamManagement';
 
 const { Header, Sider, Content } = Layout;
 
@@ -51,48 +60,59 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
     window.location.href = '/login';
   };
 
+  const getDashboardContent = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return <AdminDashboardContent user={user} />;
+      case 'MANAGER':
+        return <ManagerDashboardContent user={user} />;
+      case 'STAFF':
+        return <StaffDashboardContent user={user} />;
+      default:
+        return <div>Unknown Role</div>;
+    }
+  };
+
   const dropdownItems = [
     { key: '1', label: 'Profile' },
     { key: '2', label: 'Settings' },
     { key: '3', label: 'Logout', onClick: handleLogout },
   ];
 
-  // Base menu items with content
   const baseMenuItems: MenuItem[] = [
     {
       key: 'dashboard',
       label: 'Dashboard',
       icon: <MdDashboard size={20} />,
-      content: <AdminDashboardContent user={user} />,
-    },
-    {
-      key: 'leave-requests',
-      label: 'Leave Requests',
-      icon: <BsCalendarCheck size={20} />,
-      content: <div>Here are your Leave Requests.</div>,
+      content: getDashboardContent(role),
     },
     {
       key: 'notifications',
       label: 'Notifications',
       icon: <IoMdNotificationsOutline size={20} />,
-      content: <div>You have new Notifications.</div>,
+      content: <Notifications />,
     },
     {
       key: 'settings',
       label: 'Settings',
       icon: <CiSettings size={20} />,
-      content: <div>Update your Settings here.</div>,
+      content: <Settings />,
     },
   ];
 
-  // Additional menu items based on role
   const roleSpecificMenuItems: Record<string, MenuItem[]> = {
     ADMIN: [
       {
         key: 'users',
         label: 'User Management',
         icon: <FaUserCircle size={20} />,
-        content: <div>Manage Users here (Admin Only).</div>,
+        content: <UserManagement />,
+      },
+      {
+        key: 'export',
+        label: 'Export Reports',
+        icon: <BiDownload size={20} />,
+        content: <ExportLeaveReports />,
       },
     ],
     MANAGER: [
@@ -102,11 +122,28 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         icon: <FaUserCircle size={20} />,
         content: <div>Manage your Team here (Manager Only).</div>,
       },
+      {
+        key: 'leave-requests',
+        label: 'Leave Requests',
+        icon: <BsCalendarCheck size={20} />,
+        content: <LeaveRequest />,
+      }
     ],
-    STAFF: [],
+    STAFF: [
+      {
+        key: 'leave-requests',
+        label: 'Leave Requests',
+        icon: <BsCalendarCheck size={20} />,
+        content: <LeaveRequest />,
+      }
+    ],
   };
 
-  const menuItems = [...baseMenuItems, ...(roleSpecificMenuItems[role] || [])];
+  const menuItems = [
+    baseMenuItems[0], 
+    ...(roleSpecificMenuItems[role] || []),
+    ...baseMenuItems.slice(1),
+  ];
 
   const handleMenuClick = (key: string) => {
     setActiveKey(key);
@@ -116,7 +153,12 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
 
   return (
     <Layout className="layout-container">
-      <Sider trigger={null} collapsible collapsed={collapsed} className="sidebar">
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        className={`sidebar ${collapsed ? 'collapsed' : ''}`}
+      >
         <div className="logo">
           {collapsed ? 'LMS' : 'Leave Management'}
         </div>
@@ -193,7 +235,9 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         </Header>
 
         <Content className="content">
-          {activeContent}
+          <div className="scrollable-content">
+            {activeContent}
+          </div>
         </Content>
       </Layout>
     </Layout>
