@@ -26,7 +26,7 @@ public class LeaveService {
     private final UserRepository userRepository;
     private final UserService userService;
 
-    @Autowired
+    @Autowired(required = false)
     private EmailService emailService;
 
 
@@ -98,8 +98,12 @@ public class LeaveService {
                     "Comments: " + approverComments + "\n\nRegards,\n" + approver.getFullName();
         }
 
-        // Send the email
-        emailService.sendSimpleEmail(requestingUser.getEmail(), subject, body);
+        // Send the email (if email service is configured)
+        if (emailService != null) {
+            emailService.sendSimpleEmail(requestingUser.getEmail(), subject, body);
+        } else {
+            System.out.println("Email not sent - mail service not configured. To: " + requestingUser.getEmail() + ", Subject: " + subject);
+        }
 
         LeaveRequest updatedLeaveRequest = leaveRequestRepository.save(leaveRequest);
         return convertToDTO(updatedLeaveRequest);
