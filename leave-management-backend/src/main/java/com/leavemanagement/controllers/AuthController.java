@@ -12,7 +12,13 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(
+    origins = {
+        "http://localhost:5173",
+        "https://leave-manage.netlify.app"
+    },
+    allowCredentials = "true"
+)
 public class AuthController {
 
     @Value("${spring.security.oauth2.client.registration.azure-dev.client-id}")
