@@ -2,12 +2,13 @@ package com.leavemanagement.controllers;
 
 import com.leavemanagement.dtos.LoginRequest;
 import com.leavemanagement.dtos.LoginResponse;
+import com.leavemanagement.dtos.RegisterRequest;
 import com.leavemanagement.services.AuthService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @RestController
@@ -31,6 +32,11 @@ public class AuthController {
 
     public AuthController(AuthService authService) {
         this.authService = authService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<LoginResponse> register(@RequestBody RegisterRequest registerRequest) {
+        return ResponseEntity.ok(authService.register(registerRequest));
     }
 
     @PostMapping("/login")

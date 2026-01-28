@@ -21,38 +21,32 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final String frontendUrl;
 
-    public OAuth2SuccessHandler(
-            UserService userService,
-            JwtService jwtService,
-            @Value("${app.frontend.url}") String frontendUrl
-    ) {
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
+    public OAuth2SuccessHandler(UserService userService, JwtService jwtService) {
         this.userService = userService;
         this.jwtService = jwtService;
-        this.frontendUrl = frontendUrl;
     }
 
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
             HttpServletResponse response,
-            Authentication authentication
-    ) throws IOException, ServletException {
+            Authentication authentication) throws IOException, ServletException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         User user = userService.getCurrentUser(oAuth2User);
-        
+
         // Generate JWT token
         String token = jwtService.generateToken(user);
-        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8.toString());
-        
-        // Construct the redirect URL with token
-        String redirectUrl = String.format("%s/oauth/callback?token=%s&role=%s", 
-            frontendUrl, 
-            encodedToken,
-            user.getRole().toString().toLowerCase()
-        );
-        
+        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+        // Redirect to frontend dashboard with JWT token
+        String redirectUrl = String.format("%s/dashboard?token=%s",
+                frontendUrl,
+                encodedToken);
+
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
 }

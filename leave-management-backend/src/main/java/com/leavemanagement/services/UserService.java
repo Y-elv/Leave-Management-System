@@ -81,6 +81,10 @@ public class UserService {
         return convertToDTO(getCurrentUser());
     }
 
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
+
     public User getUserFromToken(String token) {
         try {
             String email = jwtTokenUtil.getEmailFromToken(token);
