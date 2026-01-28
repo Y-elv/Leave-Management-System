@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ToastContainer, { useToast } from '../components/ToastContainer';
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ToastContainer, { useToast } from "../components/ToastContainer";
+import { API_BASE, saveAuthAndRedirect } from "../utils/auth";
+import type { User } from "../types/user";
 
 const OAuthCallback = () => {
   const navigate = useNavigate();
@@ -9,34 +11,50 @@ const OAuthCallback = () => {
   const { toasts, addToast, removeToast } = useToast();
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const role = searchParams.get('role');
-    const error = searchParams.get('error');
+    const handleOAuthCallback = async () => {
+      const token = searchParams.get("token");
+      const role = searchParams.get("role");
+      const error = searchParams.get("error");
 
-    if (error) {
-      addToast(error, 'error');
-      setTimeout(() => navigate('/login', { replace: true }), 3000);
-      return;
-    }
+      if (error) {
+        addToast(error, "error");
+        setTimeout(() => navigate("/login", { replace: true }), 3000);
+        return;
+      }
 
-    if (!token || !role) {
-      addToast('Invalid authentication response', 'error');
-      setTimeout(() => navigate('/login', { replace: true }), 3000);
-      return;
-    }
+      if (!token || !role) {
+        addToast("Invalid authentication response", "error");
+        setTimeout(() => navigate("/login", { replace: true }), 3000);
+        return;
+      }
 
-    try {
-      // Store token
-      localStorage.setItem('token', token);
-      addToast('Login successful!', 'success');
-      
-      // Force a page reload to trigger App's useEffect and fetch user data
-      window.location.href = `/dashboard/${role}`;
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      addToast('An error occurred during login', 'error');
-      setTimeout(() => navigate('/login', { replace: true }), 3000);
-    }
+      try {
+        // Store raw token temporarily so we can fetch the full user profile
+        localStorage.setItem("token", token);
+
+        const response = await fetch(`${API_BASE}/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user profile");
+        }
+
+        const user = (await response.json()) as User;
+
+        // Save token + user and redirect to role-specific dashboard
+        addToast("Login successful!", "success");
+        saveAuthAndRedirect(token, user);
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+        addToast("An error occurred during login", "error");
+        setTimeout(() => navigate("/login", { replace: true }), 3000);
+      }
+    };
+
+    void handleOAuthCallback();
   }, [navigate, searchParams, addToast]);
 
   return (

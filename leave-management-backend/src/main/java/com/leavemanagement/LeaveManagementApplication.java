@@ -10,15 +10,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class LeaveManagementApplication {
 
     public static void main(String[] args) {
-
-        // Load .env file
-        Dotenv dotenv = Dotenv.configure()
-                .ignoreIfMissing()
-                .load();
-
-        // Make variables visible to Spring Boot
+        // Load environment variables from .env
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
-        System.out.println("DB_URL = " + System.getProperty("DB_URL"));
 
         SpringApplication.run(LeaveManagementApplication.class, args);
     }

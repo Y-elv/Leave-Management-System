@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
-import { Layout, Button, Tooltip, Input, Dropdown } from 'antd';
+import React, { useState } from "react";
+import { Layout, Button, Tooltip, Input, Dropdown } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CloseOutlined,
-} from '@ant-design/icons';
-import { IoMdNotificationsOutline, IoMdArrowDropdown } from 'react-icons/io';
-import { CiSettings } from 'react-icons/ci';
-import { FaUserCircle } from 'react-icons/fa';
-import { MdDashboard } from 'react-icons/md';
-import { BsCalendarCheck } from 'react-icons/bs';
-import { BiDownload } from 'react-icons/bi';
-import AdminDashboardContent from '../components/AdminDashboardContent';
-import '../css/LayoutDashboard.css';
-import UserManagement from './UserManagement';
-import ManagerDashboardContent from './ManagerDashboardContent';
-import StaffDashboardContent from './StaffDashboardContent';
-import LeaveRequest from './LeaveRequest';
-import ExportLeaveReports from './ExportLeaveReports';
-import Notifications from './Notifications';
-import Settings from './Settings';
-import TeamManagement from './TeamManagement';
+} from "@ant-design/icons";
+import { IoMdNotificationsOutline, IoMdArrowDropdown } from "react-icons/io";
+import { CiSettings } from "react-icons/ci";
+import { FaUserCircle } from "react-icons/fa";
+import { MdDashboard } from "react-icons/md";
+import { BsCalendarCheck } from "react-icons/bs";
+import { BiDownload } from "react-icons/bi";
+import AdminDashboardContent from "../components/AdminDashboardContent";
+import "../css/LayoutDashboard.css";
+import UserManagement from "./UserManagement";
+import ManagerDashboardContent from "./ManagerDashboardContent";
+import StaffDashboardContent from "./StaffDashboardContent";
+import LeaveRequest from "./LeaveRequest";
+import ExportLeaveReports from "./ExportLeaveReports";
+import Notifications from "./Notifications";
+import Settings from "./Settings";
+import TeamManagement from "./TeamManagement";
+import { clearAuth } from "../utils/auth";
 
 const { Header, Sider, Content } = Layout;
 
@@ -32,23 +33,23 @@ interface MenuItem {
 }
 
 interface LayoutDashboardProps {
-  role: 'ADMIN' | 'MANAGER' | 'STAFF';
+  role: "ADMIN" | "MANAGER" | "STAFF";
 }
 
 const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-  const [activeKey, setActiveKey] = useState<string>('dashboard');
+  const [searchValue, setSearchValue] = useState("");
+  const [activeKey, setActiveKey] = useState<string>("dashboard");
 
   const getUserFromToken = () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return null;
     try {
-      const payloadBase64 = token.split('.')[1];
+      const payloadBase64 = token.split(".")[1];
       const decodedPayload = JSON.parse(atob(payloadBase64));
       return decodedPayload;
     } catch (error) {
-      console.error('Failed to decode token', error);
+      console.error("Failed to decode token", error);
       return null;
     }
   };
@@ -56,17 +57,17 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   const user = getUserFromToken();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    clearAuth();
+    window.location.href = "/login";
   };
 
   const getDashboardContent = (role: string) => {
     switch (role) {
-      case 'ADMIN':
+      case "ADMIN":
         return <AdminDashboardContent user={user} />;
-      case 'MANAGER':
+      case "MANAGER":
         return <ManagerDashboardContent user={user} />;
-      case 'STAFF':
+      case "STAFF":
         return <StaffDashboardContent user={user} />;
       default:
         return <div>Unknown Role</div>;
@@ -74,27 +75,27 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   };
 
   const dropdownItems = [
-    { key: '1', label: 'Profile' },
-    { key: '2', label: 'Settings' },
-    { key: '3', label: 'Logout', onClick: handleLogout },
+    { key: "1", label: "Profile" },
+    { key: "2", label: "Settings" },
+    { key: "3", label: "Logout", onClick: handleLogout },
   ];
 
   const baseMenuItems: MenuItem[] = [
     {
-      key: 'dashboard',
-      label: 'Dashboard',
+      key: "dashboard",
+      label: "Dashboard",
       icon: <MdDashboard size={20} />,
       content: getDashboardContent(role),
     },
     {
-      key: 'notifications',
-      label: 'Notifications',
+      key: "notifications",
+      label: "Notifications",
       icon: <IoMdNotificationsOutline size={20} />,
       content: <Notifications />,
     },
     {
-      key: 'settings',
-      label: 'Settings',
+      key: "settings",
+      label: "Settings",
       icon: <CiSettings size={20} />,
       content: <Settings />,
     },
@@ -103,44 +104,44 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   const roleSpecificMenuItems: Record<string, MenuItem[]> = {
     ADMIN: [
       {
-        key: 'users',
-        label: 'User Management',
+        key: "users",
+        label: "User Management",
         icon: <FaUserCircle size={20} />,
         content: <UserManagement />,
       },
       {
-        key: 'export',
-        label: 'Export Reports',
+        key: "export",
+        label: "Export Reports",
         icon: <BiDownload size={20} />,
         content: <ExportLeaveReports />,
       },
     ],
     MANAGER: [
       {
-        key: 'team',
-        label: 'Team Management',
+        key: "team",
+        label: "Team Management",
         icon: <FaUserCircle size={20} />,
         content: <div>Manage your Team here (Manager Only).</div>,
       },
       {
-        key: 'leave-requests',
-        label: 'Leave Requests',
+        key: "leave-requests",
+        label: "Leave Requests",
         icon: <BsCalendarCheck size={20} />,
         content: <LeaveRequest />,
-      }
+      },
     ],
     STAFF: [
       {
-        key: 'leave-requests',
-        label: 'Leave Requests',
+        key: "leave-requests",
+        label: "Leave Requests",
         icon: <BsCalendarCheck size={20} />,
         content: <LeaveRequest />,
-      }
+      },
     ],
   };
 
   const menuItems = [
-    baseMenuItems[0], 
+    baseMenuItems[0],
     ...(roleSpecificMenuItems[role] || []),
     ...baseMenuItems.slice(1),
   ];
@@ -149,7 +150,8 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
     setActiveKey(key);
   };
 
-  const activeContent = menuItems.find(item => item.key === activeKey)?.content || <div>Page not found</div>;
+  const activeContent = menuItems.find((item) => item.key === activeKey)
+    ?.content || <div>Page not found</div>;
 
   return (
     <Layout className="layout-container">
@@ -157,24 +159,28 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         trigger={null}
         collapsible
         collapsed={collapsed}
-        className={`sidebar ${collapsed ? 'collapsed' : ''}`}
+        className={`sidebar ${collapsed ? "collapsed" : ""}`}
       >
-        <div className="logo">
-          {collapsed ? 'LMS' : 'Leave Management'}
-        </div>
+        <div className="logo">{collapsed ? "LMS" : "Leave Management"}</div>
 
         <div className="menu-container">
           {menuItems.map((item) => (
             <Tooltip
               key={item.key}
-              title={collapsed ? item.label : ''}
+              title={collapsed ? item.label : ""}
               placement="right"
             >
               <div
-                className={`menu-item ${activeKey === item.key ? 'active' : ''}`}
+                className={`menu-item ${
+                  activeKey === item.key ? "active" : ""
+                }`}
                 onClick={() => handleMenuClick(item.key)}
               >
-                <div className={`icon-wrapper ${activeKey === item.key ? 'active' : ''}`}>
+                <div
+                  className={`icon-wrapper ${
+                    activeKey === item.key ? "active" : ""
+                  }`}
+                >
                   {item.icon}
                 </div>
                 {!collapsed && <span className="label">{item.label}</span>}
@@ -202,9 +208,11 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 prefix={<span className="search-icon">🔍</span>}
-                suffix={searchValue ? (
-                  <CloseOutlined onClick={() => setSearchValue('')} />
-                ) : null}
+                suffix={
+                  searchValue ? (
+                    <CloseOutlined onClick={() => setSearchValue("")} />
+                  ) : null
+                }
                 className="search-input"
               />
             </div>
@@ -219,14 +227,18 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
                   onClick: item.onClick,
                 })),
               }}
-              trigger={['click']}
+              trigger={["click"]}
               placement="bottomRight"
             >
               <div className="user-section">
                 <div className="user-avatar">
                   {user?.fullName
-                    ? user.fullName.split(' ').map((word: string) => word[0]).join('').toUpperCase()
-                    : 'User'}
+                    ? user.fullName
+                        .split(" ")
+                        .map((word: string) => word[0])
+                        .join("")
+                        .toUpperCase()
+                    : "User"}
                 </div>
                 <IoMdArrowDropdown size={20} />
               </div>
@@ -235,9 +247,7 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         </Header>
 
         <Content className="content">
-          <div className="scrollable-content">
-            {activeContent}
-          </div>
+          <div className="scrollable-content">{activeContent}</div>
         </Content>
       </Layout>
     </Layout>

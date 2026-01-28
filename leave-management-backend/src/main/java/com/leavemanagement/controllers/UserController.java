@@ -8,8 +8,9 @@ import com.leavemanagement.services.JwtService;
 import com.leavemanagement.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+// import org.springframework.security.oauth2.core.user.OAuth2User; // Microsoft OAuth2 disabled
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,7 +53,7 @@ public class UserController {
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(
             @PathVariable String email,
-            @AuthenticationPrincipal OAuth2User principal
+            @AuthenticationPrincipal Authentication principal
     ) {
         // Only ADMIN can view other users by email
         User currentUser = userService.getCurrentUser();

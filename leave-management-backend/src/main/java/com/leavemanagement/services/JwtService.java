@@ -4,13 +4,13 @@ import com.leavemanagement.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.io.Decoders;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +18,7 @@ import java.util.Map;
 @Service
 public class JwtService {
 
+    // ✅ Make sure JWT_SECRET is at least 32 bytes Base64-encoded
     @Value("${jwt.secret}")
     private String secret;
 
@@ -28,8 +29,8 @@ public class JwtService {
 
     @PostConstruct
     public void init() {
-        byte[] decodedKey = Base64.getDecoder().decode(secret);
-        secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA256");
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        secretKey = Keys.hmacShaKeyFor(keyBytes); // HS256 requires >= 256-bit keys
     }
 
     public String generateToken(User user) {

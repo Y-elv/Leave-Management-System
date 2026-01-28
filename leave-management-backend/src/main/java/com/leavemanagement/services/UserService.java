@@ -8,7 +8,7 @@ import com.leavemanagement.utils.JwtTokenUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+// import org.springframework.security.oauth2.core.user.OAuth2User; // Microsoft OAuth2 disabled
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,22 +24,22 @@ public class UserService {
     private JwtTokenUtil jwtTokenUtil;
     private final UserRepository userRepository;
 
-    public User getCurrentUser(OAuth2User principal) {
-        String email = principal.getAttribute("email");
-        return userRepository.findByEmail(email)
-                .orElseGet(() -> createNewUser(principal));
-    }
-
-    private User createNewUser(OAuth2User principal) {
-        User user = new User();
-        user.setEmail(principal.getAttribute("email"));
-        user.setFullName(principal.getAttribute("name"));
-        user.setProfilePictureUrl(principal.getAttribute("picture"));
-        user.setRole(UserRole.STAFF); // Default role for new users
-        user.setLeaveBalance(0.0);
-        user.setCarryOverBalance(0.0);
-        return userRepository.save(user);
-    }
+    // Microsoft / Azure OAuth2 - disabled (no login via Microsoft Graph)
+    // public User getCurrentUser(OAuth2User principal) {
+    //     String email = principal.getAttribute("email");
+    //     return userRepository.findByEmail(email)
+    //             .orElseGet(() -> createNewUser(principal));
+    // }
+    // private User createNewUser(OAuth2User principal) {
+    //     User user = new User();
+    //     user.setEmail(principal.getAttribute("email"));
+    //     user.setFullName(principal.getAttribute("name"));
+    //     user.setProfilePictureUrl(principal.getAttribute("picture"));
+    //     user.setRole(UserRole.STAFF);
+    //     user.setLeaveBalance(0.0);
+    //     user.setCarryOverBalance(0.0);
+    //     return userRepository.save(user);
+    // }
 
     public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
@@ -79,6 +79,10 @@ public class UserService {
 
     public UserDTO getCurrentUserDTO() {
         return convertToDTO(getCurrentUser());
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
     }
 
     public User getUserFromToken(String token) {

@@ -19,7 +19,7 @@ public class User {
     private String email;
 
     @Column
-    private String password;  // Making password nullable for Microsoft auth users
+    private String password;  // Nullable when using external auth (e.g. Microsoft OAuth2 - currently disabled)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
