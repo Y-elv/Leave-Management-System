@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../config/api';
 import Calendar from 'react-calendar';
+import type { Value } from 'react-calendar/dist/esm/shared/types.js';
 import 'react-calendar/dist/Calendar.css'; 
 
 interface LeaveBalance {
@@ -35,6 +36,17 @@ const StaffDashboardContent: React.FC<StaffDashboardContentProps> = ({ user }) =
   const [error, setError] = useState<string | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false); // New for modal
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Calendar selected date
+
+  const handleCalendarChange = (value: Value) => {
+    if (value instanceof Date) {
+      setSelectedDate(value);
+      return;
+    }
+
+    if (Array.isArray(value) && value[0] instanceof Date) {
+      setSelectedDate(value[0]);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,7 +113,7 @@ const StaffDashboardContent: React.FC<StaffDashboardContentProps> = ({ user }) =
               Close
             </button>
             <Calendar
-              onChange={setSelectedDate}
+              onChange={handleCalendarChange}
               value={selectedDate}
             />
           </div>

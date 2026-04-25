@@ -20,7 +20,6 @@ import LeaveRequest from "./LeaveRequest";
 import ExportLeaveReports from "./ExportLeaveReports";
 import Notifications from "./Notifications";
 import Settings from "./Settings";
-import TeamManagement from "./TeamManagement";
 import { clearAuth } from "../utils/auth";
 
 const { Header, Sider, Content } = Layout;

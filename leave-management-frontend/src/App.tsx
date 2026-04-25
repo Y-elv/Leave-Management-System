@@ -8,7 +8,7 @@ import OAuthCallback from './pages/OAuthCallback'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoadingSpinner from './components/LoadingSpinner'
 import { User } from './types/user'
-import { API_BASE_URL, getAuthHeaders } from './config/api'
+import { API_BASE_URL } from './config/api'
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
