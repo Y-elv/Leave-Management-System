@@ -141,7 +141,7 @@ const Login = () => {
                 onChange={(e) => setUseAdminEndpoint(e.target.checked)}
                 disabled={isLoading}
               />
-              Use admin login endpoint
+              Logged In as admin
             </label>
           </div>
           <motion.button
