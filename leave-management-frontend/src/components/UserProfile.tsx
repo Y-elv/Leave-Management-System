@@ -14,7 +14,16 @@ interface ProfileReadOnly {
   profilePictureUrl: string;
 }
 
-const UserProfile: React.FC = () => {
+interface UserProfileProps {
+  /** Page title (e.g. Supervisor profile) */
+  title?: string;
+  subtitle?: string;
+}
+
+const UserProfile: React.FC<UserProfileProps> = ({
+  title = "My Profile",
+  subtitle = "Manage your personal information.",
+}) => {
   const { toasts, addToast, removeToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -159,8 +168,8 @@ const UserProfile: React.FC = () => {
   return (
     <div className="profile-card">
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
-      <h2>My Profile</h2>
-      <p className="profile-subtitle">Manage your personal information.</p>
+      <h2>{title}</h2>
+      <p className="profile-subtitle">{subtitle}</p>
 
       <div className="profile-readonly-section">
         <h3 className="profile-section-title">Account details</h3>

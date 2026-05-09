@@ -9,7 +9,8 @@ import { IoMdNotificationsOutline } from "react-icons/io";
 import { CiSettings } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
-import { BsCalendarCheck } from "react-icons/bs";
+import { BsCalendarCheck, BsClipboard2Check } from "react-icons/bs";
+import { IoBookOutline } from "react-icons/io5";
 import { BiDownload } from "react-icons/bi";
 import AdminDashboardContent from "../components/AdminDashboardContent";
 import "../css/LayoutDashboard.css";
@@ -99,7 +100,7 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
       case "ADMIN":
         return <AdminDashboardContent user={user} />;
       case "SUPERVISOR":
-        return <SupervisorDashboardContent user={user} />;
+        return <SupervisorDashboardContent user={user} view="dashboard" />;
       case "HR":
         return <AdminDashboardContent user={user} />;
       case "EMPLOYEE":
@@ -126,7 +127,15 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
     key: "profile",
     label: "Profile",
     icon: <FaUserCircle size={20} />,
-    content: <UserProfile />,
+    content:
+      role === "SUPERVISOR" ? (
+        <UserProfile
+          title="Supervisor profile"
+          subtitle="Update your display name and profile picture. Other account details stay in sync with HR."
+        />
+      ) : (
+        <UserProfile />
+      ),
   };
 
   const baseMenuItems: MenuItem[] = [
@@ -167,10 +176,41 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
     ],
     SUPERVISOR: [
       {
-        key: "leave-requests",
-        label: "Leave Requests",
-        icon: <BsCalendarCheck size={20} />,
-        content: <LeaveRequest />,
+        key: "approvals",
+        label: "Pending approvals",
+        icon: <BsClipboard2Check size={20} />,
+        content: <SupervisorDashboardContent user={user} view="approvals" />,
+      },
+      {
+        key: "supervisor-guide",
+        label: "Supervisor guide",
+        icon: <IoBookOutline size={22} />,
+        content: (
+          <div style={{ padding: "16px", lineHeight: 1.8, maxWidth: 720 }}>
+            <h3>How supervisor approvals work</h3>
+            <p>
+              Review your team&apos;s leave requests from the dashboard or the{" "}
+              <strong>Pending approvals</strong> tab. Multi-step workflows may need HR after your decision.
+            </p>
+            <ul>
+              <li>
+                <strong>Dashboard:</strong> Statistics, charts, and the full queue in one place.
+              </li>
+              <li>
+                <strong>Pending approvals:</strong> Focused list—same data, ideal on smaller screens.
+              </li>
+              <li>
+                <strong>Action required:</strong> Use Approve or Reject only when the card shows this badge (usually step 1).
+              </li>
+              <li>
+                <strong>Awaiting next approver:</strong> You will not see action buttons until the request returns to your step.
+              </li>
+              <li>
+                <strong>Attachments:</strong> Open supporting documents before you decide.
+              </li>
+            </ul>
+          </div>
+        ),
       },
     ],
     HR: [
