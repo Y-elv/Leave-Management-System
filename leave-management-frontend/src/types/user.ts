@@ -1,11 +1,15 @@
-export type UserRole = 'STAFF' | 'MANAGER' | 'ADMIN';
+export type UserRole =
+  | "EMPLOYEE"
+  | "SUPERVISOR"
+  | "HR"
+  | "ADMIN";
 
 export interface User {
-    id: number;
-    fullName: string;
-    email: string;
-    role: UserRole;
-    profilePictureUrl?: string;
-    leaveBalance: number;
-    carryOverBalance: number;
+  id: string | number;
+  fullName: string;
+  email: string;
+  role: UserRole | string;
+  profilePictureUrl?: string | null;
+  leaveBalance: number;
+  carryOverBalance: number;
 }

@@ -91,8 +91,9 @@ const UserManagement: React.FC = () => {
           onChange={(value) => handleRoleChange(record.id, value)}
         >
           <Option value="ADMIN">Admin</Option>
-          <Option value="MANAGER">Manager</Option>
-          <Option value="STAFF">Staff</Option>
+          <Option value="HR">HR</Option>
+          <Option value="SUPERVISOR">Supervisor</Option>
+          <Option value="EMPLOYEE">Employee</Option>
         </Select>
       ),
     },

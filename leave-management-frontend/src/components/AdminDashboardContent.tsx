@@ -28,8 +28,9 @@ interface DashboardContentProps {
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
   const [stats, setStats] = useState({
-    staffCount: 0,
-    managerCount: 0,
+    employeeCount: 0,
+    supervisorCount: 0,
+    hrCount: 0,
     adminCount: 0,
   });
 
@@ -61,11 +62,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
 
         const users: UserData[] = await response.json();
 
-        const staffCount = users.filter(user => user.role === "STAFF").length;
-        const managerCount = users.filter(user => user.role === "MANAGER").length;
+        const employeeCount = users.filter(user => user.role === "EMPLOYEE").length;
+        const supervisorCount = users.filter(user => user.role === "SUPERVISOR").length;
+        const hrCount = users.filter(user => user.role === "HR").length;
         const adminCount = users.filter(user => user.role === "ADMIN").length;
 
-        setStats({ staffCount, managerCount, adminCount });
+        setStats({ employeeCount, supervisorCount, hrCount, adminCount });
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -114,12 +116,16 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
 
       <div style={{ marginTop: '30px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         <div style={cardStyle}>
-          <h2>{stats.staffCount}</h2>
-          <p>Staff Members</p>
+          <h2>{stats.employeeCount}</h2>
+          <p>Employees</p>
         </div>
         <div style={cardStyle}>
-          <h2>{stats.managerCount}</h2>
-          <p>Managers</p>
+          <h2>{stats.supervisorCount}</h2>
+          <p>Supervisors</p>
+        </div>
+        <div style={cardStyle}>
+          <h2>{stats.hrCount}</h2>
+          <p>HR</p>
         </div>
         <div style={cardStyle}>
           <h2>{stats.adminCount}</h2>

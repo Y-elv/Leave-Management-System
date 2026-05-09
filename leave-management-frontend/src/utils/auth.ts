@@ -48,10 +48,12 @@ export function clearAuth() {
 export function getDashboardRouteForRole(role?: UserRole | string | null) {
   if (!role) return "/login";
   const r = role.toString().toUpperCase();
+  if (r === "HR") return "/dashboard/hr";
+  if (r === "SUPERVISOR") return "/dashboard/supervisor";
   if (r === "ADMIN") return "/dashboard/admin";
-  if (r === "MANAGER") return "/dashboard/manager";
-  // Fallback for STAFF or unknown roles
-  return "/dashboard/staff";
+  if (r === "EMPLOYEE") return "/dashboard/employee";
+  // Fallback for unknown roles
+  return `/dashboard/${r.toLowerCase()}`;
 }
 
 // Convenience helper: save auth and redirect to appropriate dashboard

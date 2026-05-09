@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../config/api';
 import ToastContainer, { useToast } from '../components/ToastContainer';
-import '../css/ManagerDashboard.css'; // Assume you have basic styling
+import '../css/SupervisorDashboard.css';
 
 interface LeaveRequest {
   id: number;
@@ -15,11 +15,11 @@ interface LeaveRequest {
   comment?: string;
 }
 
-interface ManagerDashboardContentProps {
+interface SupervisorDashboardContentProps {
   user: { fullName: string } | null;
 }
 
-const ManagerDashboardContent: React.FC<ManagerDashboardContentProps> = ({ user }) => {
+const SupervisorDashboardContent: React.FC<SupervisorDashboardContentProps> = ({ user }) => {
   const { toasts, addToast, removeToast } = useToast();
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,6 @@ const ManagerDashboardContent: React.FC<ManagerDashboardContentProps> = ({ user 
       const data: LeaveRequest[] = await response.json();
       setLeaveRequests(data);
 
-      // Calculate stats
       const approved = data.filter(l => l.status === 'APPROVED').length;
       const rejected = data.filter(l => l.status === 'REJECTED').length;
       const pending = data.filter(l => l.status === 'PENDING').length;
@@ -109,19 +108,17 @@ const ManagerDashboardContent: React.FC<ManagerDashboardContentProps> = ({ user 
   };
 
   return (
-    <div className="manager-dashboard-container">
+    <div className="supervisor-dashboard-container">
       <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
 
       <motion.div
-        className="manager-dashboard-box"
+        className="supervisor-dashboard-box"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Welcome Message */}
-        <h1>Welcome, {user?.fullName || 'Manager'}!</h1>
+        <h1>Welcome, {user?.fullName || 'Supervisor'}!</h1>
 
-        {/* Cards */}
         <div style={{ marginTop: '30px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <div style={cardStyle}>
             <h2>{stats.approved}</h2>
@@ -137,7 +134,6 @@ const ManagerDashboardContent: React.FC<ManagerDashboardContentProps> = ({ user 
           </div>
         </div>
 
-        {/* Leave Requests */}
         <h2 style={{ marginTop: '40px' }}>Pending Leave Requests</h2>
 
         {loading ? (
@@ -193,7 +189,6 @@ const ManagerDashboardContent: React.FC<ManagerDashboardContentProps> = ({ user 
   );
 };
 
-// Reused card style
 const cardStyle: React.CSSProperties = {
   flex: '1',
   minWidth: '200px',
@@ -204,4 +199,5 @@ const cardStyle: React.CSSProperties = {
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
 };
 
-export default ManagerDashboardContent;
+export default SupervisorDashboardContent;
+

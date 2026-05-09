@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { Layout, Button, Tooltip, Input, Dropdown } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import { Layout, Button, Tooltip, Dropdown } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
-import { IoMdNotificationsOutline, IoMdArrowDropdown } from "react-icons/io";
+import { IoMdNotificationsOutline } from "react-icons/io";
 import { CiSettings } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
@@ -14,13 +14,16 @@ import { BiDownload } from "react-icons/bi";
 import AdminDashboardContent from "../components/AdminDashboardContent";
 import "../css/LayoutDashboard.css";
 import UserManagement from "./UserManagement";
-import ManagerDashboardContent from "./ManagerDashboardContent";
+import SupervisorDashboardContent from "./SupervisorDashboardContent";
 import StaffDashboardContent from "./StaffDashboardContent";
 import LeaveRequest from "./LeaveRequest";
 import ExportLeaveReports from "./ExportLeaveReports";
 import Notifications from "./Notifications";
 import Settings from "./Settings";
-import { clearAuth } from "../utils/auth";
+import { clearAuth, getAuth, getDashboardRouteForRole } from "../utils/auth";
+import { useNavigate } from "react-router-dom";
+import UserProfile from "./UserProfile";
+import { motion, AnimatePresence } from "framer-motion";
 
 const { Header, Sider, Content } = Layout;
 
@@ -32,15 +35,32 @@ interface MenuItem {
 }
 
 interface LayoutDashboardProps {
-  role: "ADMIN" | "MANAGER" | "STAFF";
+  role: "ADMIN" | "EMPLOYEE" | "HR" | "SUPERVISOR";
 }
 
 const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [mobile, setMobile] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeKey, setActiveKey] = useState<string>("dashboard");
 
+  const [authTick, setAuthTick] = useState(0);
+
+  useEffect(() => {
+    const onAuthRefresh = () => setAuthTick((t) => t + 1);
+    window.addEventListener("slm-auth-updated", onAuthRefresh);
+    return () => window.removeEventListener("slm-auth-updated", onAuthRefresh);
+  }, []);
+
   const getUserFromToken = () => {
+    const savedUser = getAuth()?.user as {
+      fullName?: string;
+      name?: string;
+      profilePictureUrl?: string | null;
+    } | undefined;
+    if (savedUser) return savedUser;
+
     const token = localStorage.getItem("token");
     if (!token) return null;
     try {
@@ -53,7 +73,21 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
     }
   };
 
-  const user = getUserFromToken();
+  const user = useMemo(() => getUserFromToken(), [authTick]);
+
+  const sessionUser = user as {
+    fullName?: string;
+    name?: string;
+    profilePictureUrl?: string | null;
+  } | null;
+  const displayName = sessionUser?.fullName || sessionUser?.name || "User";
+
+  const getInitials = (fullName?: string) => {
+    if (!fullName) return "U";
+    const names = fullName.trim().split(/\s+/).filter(Boolean);
+    if (names.length === 0) return "U";
+    return names[0][0].toUpperCase();
+  };
 
   const handleLogout = () => {
     clearAuth();
@@ -64,20 +98,36 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
     switch (role) {
       case "ADMIN":
         return <AdminDashboardContent user={user} />;
-      case "MANAGER":
-        return <ManagerDashboardContent user={user} />;
-      case "STAFF":
+      case "SUPERVISOR":
+        return <SupervisorDashboardContent user={user} />;
+      case "HR":
+        return <AdminDashboardContent user={user} />;
+      case "EMPLOYEE":
         return <StaffDashboardContent user={user} />;
       default:
         return <div>Unknown Role</div>;
     }
   };
 
-  const dropdownItems = [
-    { key: "1", label: "Profile" },
-    { key: "2", label: "Settings" },
-    { key: "3", label: "Logout", onClick: handleLogout },
-  ];
+  useEffect(() => {
+    const onResize = () => {
+      const isMobile = window.innerWidth <= 992;
+      setMobile(isMobile);
+      if (!isMobile) {
+        setMobileSidebarOpen(false);
+      }
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const profileMenuItem: MenuItem = {
+    key: "profile",
+    label: "Profile",
+    icon: <FaUserCircle size={20} />,
+    content: <UserProfile />,
+  };
 
   const baseMenuItems: MenuItem[] = [
     {
@@ -115,13 +165,7 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         content: <ExportLeaveReports />,
       },
     ],
-    MANAGER: [
-      {
-        key: "team",
-        label: "Team Management",
-        icon: <FaUserCircle size={20} />,
-        content: <div>Manage your Team here (Manager Only).</div>,
-      },
+    SUPERVISOR: [
       {
         key: "leave-requests",
         label: "Leave Requests",
@@ -129,44 +173,148 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         content: <LeaveRequest />,
       },
     ],
-    STAFF: [
+    HR: [
       {
-        key: "leave-requests",
-        label: "Leave Requests",
+        key: "users",
+        label: "User Management",
+        icon: <FaUserCircle size={20} />,
+        content: <UserManagement />,
+      },
+      {
+        key: "export",
+        label: "Export Reports",
+        icon: <BiDownload size={20} />,
+        content: <ExportLeaveReports />,
+      },
+    ],
+    EMPLOYEE: [
+      {
+        key: "apply-leave",
+        label: "Apply Leave",
         icon: <BsCalendarCheck size={20} />,
         content: <LeaveRequest />,
+      },
+      {
+        key: "leave-guide",
+        label: "Leave Guide",
+        icon: <FaUserCircle size={20} />,
+        content: (
+          <div style={{ padding: "16px", lineHeight: 1.8 }}>
+            <h3>Employee Leave Menu Guide</h3>
+            <p>Use this workspace to manage your leave end-to-end:</p>
+            <ul>
+              <li><strong>Dashboard:</strong> View balance, status insights, and recent requests.</li>
+              <li><strong>Apply Leave:</strong> Create a new leave request with supporting documents.</li>
+              <li><strong>Notifications:</strong> Track approvals/rejections and updates.</li>
+              <li><strong>Settings:</strong> Keep your profile details current.</li>
+            </ul>
+          </div>
+        ),
       },
     ],
   };
 
+  const normalizedRole = role === "EMPLOYEE" ? "EMPLOYEE" : role;
+
   const menuItems = [
     baseMenuItems[0],
-    ...(roleSpecificMenuItems[role] || []),
+    profileMenuItem,
+    ...(roleSpecificMenuItems[normalizedRole] || []),
     ...baseMenuItems.slice(1),
   ];
 
   const handleMenuClick = (key: string) => {
     setActiveKey(key);
+    if (mobile) {
+      setMobileSidebarOpen(false);
+    }
   };
 
   const activeContent = menuItems.find((item) => item.key === activeKey)
     ?.content || <div>Page not found</div>;
 
+  const headerTitle = useMemo(() => {
+    return menuItems.find((item) => item.key === activeKey)?.label || "Dashboard";
+  }, [activeKey, menuItems]);
+
+  const siderCollapsed = mobile ? !mobileSidebarOpen : collapsed;
+  const goToDashboardHome = () => {
+    const path = getDashboardRouteForRole(role);
+    navigate(path, { replace: false });
+    setActiveKey("dashboard");
+    if (mobile) setMobileSidebarOpen(false);
+  };
+
+  const userMenuItems = [
+    {
+      key: "profile",
+      label: "Profile",
+      onClick: () => setActiveKey("profile"),
+    },
+    {
+      key: "logout",
+      label: "Logout",
+      onClick: handleLogout,
+    },
+  ];
+
   return (
     <Layout className="layout-container">
+      {mobile && mobileSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+      )}
       <Sider
         trigger={null}
         collapsible
-        collapsed={collapsed}
-        className={`sidebar ${collapsed ? "collapsed" : ""}`}
+        width={260}
+        collapsedWidth={mobile ? 0 : 80}
+        collapsed={siderCollapsed}
+        className={`sidebar ${collapsed ? "collapsed" : ""} ${
+          mobile && mobileSidebarOpen ? "sidebar--mobile-full" : ""
+        }`}
+        breakpoint="lg"
+        style={
+          mobile
+            ? { position: "fixed", zIndex: 1250, height: "100vh", left: 0, top: 0 }
+            : undefined
+        }
       >
-        <div className="logo">{collapsed ? "LMS" : "Leave Management"}</div>
+        <div className="logo-row">
+          <button
+            type="button"
+            className="logo logo--home"
+            onClick={goToDashboardHome}
+            title="Go to dashboard home"
+          >
+            {siderCollapsed ? (
+              <span className="logo-brand-abbrev">LMS</span>
+            ) : (
+              <>
+                <span className="logo-brand-desktop">
+                  <span className="logo-brand-line">
+                    <strong className="logo-brand-strong">Leave Management</strong>
+                    <span className="logo-brand-system"> System</span>
+                  </span>
+                </span>
+                <span className="logo-brand-mobile">LMS</span>
+              </>
+            )}
+          </button>
+          {mobileSidebarOpen && (
+            <Button
+              type="text"
+              className="sidebar-close-btn"
+              icon={<CloseOutlined />}
+              onClick={() => setMobileSidebarOpen(false)}
+            />
+          )}
+        </div>
 
         <div className="menu-container">
           {menuItems.map((item) => (
             <Tooltip
               key={item.key}
-              title={collapsed ? item.label : ""}
+              title={siderCollapsed ? item.label : ""}
               placement="right"
             >
               <div
@@ -182,7 +330,7 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
                 >
                   {item.icon}
                 </div>
-                {!collapsed && <span className="label">{item.label}</span>}
+                {!siderCollapsed && <span className="label">{item.label}</span>}
               </div>
             </Tooltip>
           ))}
@@ -194,59 +342,61 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
           <div className="left-section">
             <Button
               type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              icon={
+                mobile
+                  ? (mobileSidebarOpen ? <CloseOutlined /> : <MenuUnfoldOutlined />)
+                  : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)
+              }
+              onClick={() => {
+                if (mobile) {
+                  setMobileSidebarOpen((prev) => !prev);
+                } else {
+                  setCollapsed(!collapsed);
+                }
+              }}
               className="toggle-button"
             />
-          </div>
-
-          <div className="center-section">
-            <div className="search-wrapper">
-              <Input
-                placeholder="Search..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                prefix={<span className="search-icon">🔍</span>}
-                suffix={
-                  searchValue ? (
-                    <CloseOutlined onClick={() => setSearchValue("")} />
-                  ) : null
-                }
-                className="search-input"
-              />
-            </div>
+            <span className="page-title">{headerTitle}</span>
           </div>
 
           <div className="right-section">
             <Dropdown
-              menu={{
-                items: dropdownItems.map((item) => ({
-                  key: item.key,
-                  label: item.label,
-                  onClick: item.onClick,
-                })),
-              }}
-              trigger={["click"]}
+              menu={{ items: userMenuItems }}
+              trigger={["hover"]}
               placement="bottomRight"
             >
               <div className="user-section">
+                <span className="user-name">{displayName}</span>
                 <div className="user-avatar">
-                  {user?.fullName
-                    ? user.fullName
-                        .split(" ")
-                        .map((word: string) => word[0])
-                        .join("")
-                        .toUpperCase()
-                    : "User"}
+                  {sessionUser?.profilePictureUrl ? (
+                    <img
+                      src={sessionUser.profilePictureUrl}
+                      alt={displayName}
+                      style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    getInitials(sessionUser?.fullName || sessionUser?.name)
+                  )}
                 </div>
-                <IoMdArrowDropdown size={20} />
               </div>
             </Dropdown>
           </div>
         </Header>
 
         <Content className="content">
-          <div className="scrollable-content">{activeContent}</div>
+          <div className="scrollable-content">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeKey}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.22 }}
+              >
+                {activeContent}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </Content>
       </Layout>
     </Layout>

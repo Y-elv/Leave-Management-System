@@ -1,0 +1,132 @@
+/* Employee dashboard (StaffDashboardContent) — responsive layout */
+
+.employee-dashboard {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: clamp(12px, 3vw, 20px);
+  display: grid;
+  gap: clamp(12px, 3vw, 20px);
+  min-width: 0;
+}
+
+.employee-dashboard-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.employee-dashboard-hero-main {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.employee-dashboard-hero-aside {
+  flex: 0 0 auto;
+  text-align: right;
+  min-width: 0;
+}
+
+.employee-dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr));
+  gap: clamp(10px, 2vw, 16px);
+  min-width: 0;
+}
+
+.employee-dashboard-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.employee-dashboard-card-title {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.employee-dashboard-card-value {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
+}
+
+.employee-dashboard-insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: clamp(12px, 2vw, 16px);
+  min-width: 0;
+}
+
+.employee-dashboard-section {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: visible;
+}
+
+.employee-dashboard-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 72px), 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.employee-dashboard-status-cell {
+  min-width: 0;
+}
+
+.employee-dashboard-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.employee-dashboard-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+}
+
+.employee-dashboard-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+}
+
+@media (max-width: 640px) {
+  .employee-dashboard-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .employee-dashboard-hero-aside {
+    text-align: left;
+  }
+
+  .employee-dashboard-hero-aside p:last-child {
+    font-size: 1.5rem !important;
+    line-height: 1.2;
+  }
+
+  .employee-dashboard-h1 {
+    font-size: 1.35rem !important;
+    line-height: 1.25;
+  }
+
+  .employee-dashboard-lead {
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .employee-dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+}

@@ -30,9 +30,10 @@ const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemoveToast }
 // Hook to manage toasts
 export const useToast = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const createToastId = () => Date.now() + Math.floor(Math.random() * 1000000);
 
   const addToast = (message: string, type: ToastType = 'info') => {
-    const id = Date.now();
+    const id = createToastId();
     setToasts((currentToasts) => [...currentToasts, { id, message, type }]);
   };
 

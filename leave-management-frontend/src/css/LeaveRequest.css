@@ -1,210 +1,289 @@
-/* LeaveRequest.css */
+/* Leave request — embedded in dashboard + standalone-friendly */
 
-.leave-request-container {
+.leave-request-root {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 0 24px;
+}
+
+.leave-request-hero {
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  background: linear-gradient(135deg, #312e81 0%, #4f46e5 45%, #6366f1 100%);
+  color: #fff;
+  box-shadow: 0 12px 40px rgba(79, 70, 229, 0.35);
+  overflow: hidden;
+  position: relative;
+}
+
+.leave-request-hero::after {
+  content: "";
+  position: absolute;
+  right: -20%;
+  top: -40%;
+  width: 60%;
+  height: 180%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.leave-request-hero-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.leave-request-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.leave-request-title {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.leave-request-lead {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  opacity: 0.92;
+  max-width: 36rem;
+}
+
+.leave-request-form-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem 1.5rem 1.75rem;
+  box-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.08),
+    0 12px 24px -4px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.leave-request-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.leave-field {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 2rem 1rem;
-  background-color: #f5f7fa;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-.leave-request-box {
+.leave-field-full {
+  grid-column: 1 / -1;
+}
+
+.leave-field-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.leave-optional {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.leave-input {
   width: 100%;
-  max-width: 600px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 2.5rem;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9375rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background 0.2s;
+  color: #111827;
 }
 
-.leave-request-box h2 {
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #333;
-  font-size: 1.8rem;
-  text-align: center;
+.leave-input:hover {
+  border-color: #c7d2fe;
+  background: #fff;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #555;
-}
-
-.form-group select,
-.form-group input[type="date"],
-.form-group textarea {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-group select:focus,
-.form-group input[type="date"]:focus,
-.form-group textarea:focus {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+.leave-input:focus {
   outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  background: #fff;
 }
 
-.form-group textarea {
+.leave-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  padding-right: 2rem;
+}
+
+.leave-textarea {
   min-height: 100px;
   resize: vertical;
+  line-height: 1.5;
 }
 
-.form-group input[type="file"] {
-  display: block;
-  margin-top: 0.5rem;
-  padding: 8px 0;
+.leave-field-error {
+  font-size: 0.8125rem;
+  color: #dc2626;
 }
 
-.requirement-note {
-  display: block;
-  color: #e74c3c;
-  font-size: 0.85rem;
+.leave-upload-block {
   margin-top: 0.25rem;
 }
 
-.error-message {
+.leave-file-drop {
+  position: relative;
   display: block;
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-
-.file-info {
-  margin-top: 0.75rem;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.file-info span {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.upload-button {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 14px;
-  font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  border: 2px dashed #c7d2fe;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+  min-height: 5rem;
 }
 
-.upload-button:hover {
-  background-color: #3a7bcb;
+.leave-file-drop:hover {
+  border-color: #818cf8;
+  background: #f5f3ff;
 }
 
-.upload-button:disabled {
-  background-color: #a0c2e8;
-  cursor: not-allowed;
-}
-
-.uploaded-url {
-  margin-top: 0.75rem;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  border-left: 3px solid #4a90e2;
-}
-
-.uploaded-url a {
-  color: #4a90e2;
-  text-decoration: none;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-}
-
-.uploaded-url a:hover {
-  text-decoration: underline;
-}
-
-.submit-button {
-  background-color: #1890ff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
+.leave-file-input {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  margin-top: 1rem;
-  transition: background-color 0.2s;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
 }
 
-.submit-button:hover {
-  background-color: #1890ff;
+.leave-file-drop-content {
+  padding: 1.25rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.submit-button:disabled {
-  background-color: #1890ff;
-  cursor: not-allowed;
+.leave-file-placeholder {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #4338ca;
 }
 
-/* Toast container styles */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
+.leave-file-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e1b4b;
+  word-break: break-word;
 }
 
-.toast {
+.leave-file-hint {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.leave-summary-pill {
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 6px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 300px;
-  max-width: 400px;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
 }
 
-.toast.success {
-  border-left: 4px solid #1890ff;
+.leave-summary-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #065f46;
 }
 
-.toast.error {
-  border-left: 4px solid #e74c3c;
+.leave-summary-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #047857;
+  font-variant-numeric: tabular-nums;
 }
 
-.toast-message {
-  flex: 1;
-  margin-right: 12px;
-}
-
-.toast-close {
-  background: transparent;
+.leave-submit-btn {
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
   border: none;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 1.1rem;
-  color: #888;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #7c3aed 100%);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
-@media (max-width: 768px) {
-  .leave-request-box {
-    padding: 1.5rem;
+.leave-submit-btn:hover:not(:disabled) {
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.45);
+}
+
+.leave-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.leave-submit-spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: leave-spin 0.7s linear infinite;
+}
+
+@keyframes leave-spin {
+  to {
+    transform: rotate(360deg);
   }
-  
-  .toast {
-    min-width: auto;
-    max-width: 300px;
+}
+
+@media (max-width: 640px) {
+  .leave-request-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leave-request-title {
+    font-size: 1.35rem;
+  }
+
+  .leave-request-hero {
+    padding: 1rem 1.15rem;
   }
 }

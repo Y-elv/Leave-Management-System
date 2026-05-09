@@ -8,7 +8,7 @@ interface StaffDashboardProps {
 }
 
 const StaffDashboard: React.FC<StaffDashboardProps> = () => {
-  return <LayoutDashboard role="STAFF" />;
+  return <LayoutDashboard role="EMPLOYEE" />;
 };
 
 export default StaffDashboard;

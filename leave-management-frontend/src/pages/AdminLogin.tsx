@@ -6,7 +6,7 @@ import ToastContainer, { useToast } from "../components/ToastContainer";
 import { API_BASE, saveAuthAndRedirect } from "../utils/auth";
 import "../css/Login.css";
 
-const Login = () => {
+const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,12 +18,11 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Add timeout to prevent infinite loading
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
-        const response = await fetch(`${API_BASE}/api/auth/login`, {
+        const response = await fetch(`${API_BASE}/api/auth/admin/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -40,25 +39,20 @@ const Login = () => {
           return;
         }
 
-        // data expected: { token, user }
         if (!data?.token || !data?.user) {
           addToast("Invalid login response from server", "error");
           return;
         }
 
-        // Store token + user and redirect to role-specific dashboard
         addToast("Login successful!", "success");
         saveAuthAndRedirect(data.token, data.user);
       } finally {
         clearTimeout(timeoutId);
       }
     } catch (error) {
-      console.error("Login error:", error);
-      if (error instanceof Error) {
-        // Don't show error for aborted requests
-        if (error.name !== "AbortError") {
-          addToast("An error occurred during login", "error");
-        }
+      console.error("Admin login error:", error);
+      if (error instanceof Error && error.name !== "AbortError") {
+        addToast("An error occurred during login", "error");
       }
     } finally {
       setIsLoading(false);
@@ -81,7 +75,7 @@ const Login = () => {
           transition={{ delay: 0.3, duration: 0.6 }}
         >
           <h1>Leave Management System</h1>
-          <p>Streamline your leave requests and approvals</p>
+          <p>Sign in to manage the system</p>
         </motion.div>
 
         <motion.form
@@ -121,7 +115,7 @@ const Login = () => {
               <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
             </button>
           </div>
-        
+
           <motion.button
             type="submit"
             className="login-button"
@@ -132,11 +126,10 @@ const Login = () => {
             {isLoading ? "Signing in..." : "Sign in"}
           </motion.button>
         </motion.form>
-          
-       
       </motion.div>
     </div>
   );
 };
 
-export default Login;
+export default AdminLogin;
+

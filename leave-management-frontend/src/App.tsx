@@ -1,14 +1,17 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
-import StaffDashboard from './pages/dashboard/StaffDashboard'
-import ManagerDashboard from './pages/dashboard/ManagerDashboard'
+import EmployeeDashboard from './pages/dashboard/EmployeeDashboard'
 import AdminDashboard from './pages/dashboard/AdminDashboard'
+import HrDashboard from './pages/dashboard/HrDashboard'
+import SupervisorDashboard from './pages/dashboard/SupervisorDashboard'
 import OAuthCallback from './pages/OAuthCallback'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoadingSpinner from './components/LoadingSpinner'
 import { User } from './types/user'
 import { API_BASE_URL } from './config/api'
+import AdminLogin from './pages/AdminLogin'
+import { clearAuth, getAuth, getDashboardRouteForRole, saveAuth } from './utils/auth'
 
 const App = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -19,8 +22,17 @@ const App = () => {
     const initializeUser = async () => {
       try {
         const token = localStorage.getItem('token');
+        const savedAuth = getAuth();
 
         if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        // Fast-path: restore user from local storage to avoid login bounce.
+        if (savedAuth?.user) {
+          setUser(savedAuth.user);
+          setAuthError(false);
           setLoading(false);
           return;
         }
@@ -39,10 +51,15 @@ const App = () => {
            
           if (response.ok) {
             const data = await response.json();
-            setUser(data);
+            // Support response shapes: { ...user }, { user: {...user} }, { data: {...user} }
+            const normalizedUser = (data?.data ?? data?.user ?? data) as User;
+            setUser(normalizedUser);
+            // Keep local auth payload in sync with the most complete user profile from /me.
+            saveAuth(token, normalizedUser);
             setAuthError(false);
           } else {
             console.log('Invalid token or session expired');
+            clearAuth();
             setAuthError(true);
           }
         } finally {
@@ -53,7 +70,7 @@ const App = () => {
         if (error instanceof Error) {
           // Only clear token if it's not an abort error
           if (error.name !== 'AbortError') {
-            localStorage.removeItem('token');
+            clearAuth();
             setAuthError(true);
           }
         }
@@ -73,24 +90,39 @@ const App = () => {
     return <Navigate to="/login" replace />;
   }
 
+  const userDashboardRoute = getDashboardRouteForRole(user?.role);
+
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={
-          user ? <Navigate to={`/dashboard/${user.role.toLowerCase()}`} replace /> : <Login />
+          user ? <Navigate to={userDashboardRoute} replace /> : <Login />
+        } />
+
+        <Route path="/admin/login" element={
+          user ? <Navigate to={userDashboardRoute} replace /> : <AdminLogin />
         } />
 
         <Route path="/oauth/callback" element={<OAuthCallback />} />
 
-        <Route path="/dashboard/staff" element={
-          <ProtectedRoute user={user} allowedRoles={['STAFF']} key={user?.id}>
-            <StaffDashboard user={user!} />
+        {/* Legacy route: keep for backward compatibility */}
+        <Route path="/dashboard/staff" element={<Navigate to="/dashboard/employee" replace />} />
+
+        <Route path="/dashboard/employee" element={
+          <ProtectedRoute user={user} allowedRoles={['EMPLOYEE']} key={user?.id}>
+            <EmployeeDashboard user={user!} />
           </ProtectedRoute>
         } />
 
-        <Route path="/dashboard/manager" element={
-          <ProtectedRoute user={user} allowedRoles={['MANAGER']} key={user?.id}>
-            <ManagerDashboard user={user!} />
+        <Route path="/dashboard/supervisor" element={
+          <ProtectedRoute user={user} allowedRoles={['SUPERVISOR']} key={user?.id}>
+            <SupervisorDashboard user={user!} />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/dashboard/hr" element={
+          <ProtectedRoute user={user} allowedRoles={['HR']} key={user?.id}>
+            <HrDashboard user={user!} />
           </ProtectedRoute>
         } />
 
@@ -101,7 +133,7 @@ const App = () => {
         } />
 
         <Route path="/" element={
-          user ? <Navigate to={`/dashboard/${user.role.toLowerCase()}`} replace /> : <Navigate to="/login" replace />
+          user ? <Navigate to={userDashboardRoute} replace /> : <Navigate to="/login" replace />
         } />
 
         <Route path="*" element={<Navigate to="/" replace />} />
