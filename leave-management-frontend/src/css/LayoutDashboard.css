@@ -442,3 +442,34 @@ button.logo--home:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* Notification Modal Styles */
+.notif-item-unread {
+  background-color: #f0f7ff;
+  transition: background-color 0.3s;
+  border-left: 3px solid #1890ff;
+  padding-left: 12px !important;
+}
+
+.notif-item-unread:hover {
+  background-color: #e6f4ff;
+}
+
+.notif-item-read {
+  background-color: #ffffff;
+  opacity: 0.8;
+  padding-left: 15px !important;
+}
+
+.notification-trigger {
+  color: #595959;
+  transition: color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-trigger:hover {
+  color: #1890ff;
+  background-color: rgba(24, 144, 255, 0.05);
+}

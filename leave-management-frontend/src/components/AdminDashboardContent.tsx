@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../config/api';
 import { motion } from 'framer-motion';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
+import { FaUsers, FaUserTie, FaUserCog, FaUserShield } from 'react-icons/fa';
+import '../css/AdminDashboard.css';
 
-interface UserData {
-  id: number;
-  fullName: string;
-  email: string;
-  role: string;
-  profilePictureUrl: string;
-  leaveBalance: number;
-  carryOverBalance: number;
-}
 
 interface LeaveRequest {
   id: number;
@@ -23,10 +29,13 @@ interface LeaveRequest {
 }
 
 interface DashboardContentProps {
-  user: { fullName: string } | null;
+  user: { fullName?: string; name?: string } | null;
+  onNavigate?: (key: string) => void;
 }
 
-const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+const AdminDashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
   const [stats, setStats] = useState({
     employeeCount: 0,
     supervisorCount: 0,
@@ -48,7 +57,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
 
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/users`, {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -57,17 +66,17 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error('Failed to fetch dashboard stats');
         }
 
-        const users: UserData[] = await response.json();
-
-        const employeeCount = users.filter(user => user.role === "EMPLOYEE").length;
-        const supervisorCount = users.filter(user => user.role === "SUPERVISOR").length;
-        const hrCount = users.filter(user => user.role === "HR").length;
-        const adminCount = users.filter(user => user.role === "ADMIN").length;
-
-        setStats({ employeeCount, supervisorCount, hrCount, adminCount });
+        const data = await response.json();
+        // The API returns { totalUsers, leaveRequests: { pending, approved, rejected, total } }
+        setStats({ 
+          employeeCount: data.totalUsers || 0, 
+          supervisorCount: data.leaveRequests?.pending || 0, 
+          hrCount: data.leaveRequests?.approved || 0, 
+          adminCount: data.leaveRequests?.rejected || 0 
+        });
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -75,7 +84,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
 
     const fetchLeaveRequests = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/leave/all`, {
+        const response = await fetch(`${API_BASE_URL}/api/leaves/all`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -87,8 +96,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
           throw new Error('Failed to fetch leave requests');
         }
 
-        const requests: LeaveRequest[] = await response.json();
-        setLeaveRequests(requests);
+        const data = await response.json();
+        // Map API response to our local LeaveRequest interface
+        const mappedRequests = data.map((r: any) => ({
+          id: r._id,
+          employeeName: r.requester?.fullName || "Unknown",
+          leaveType: r.leaveType,
+          startDate: new Date(r.startDate).toLocaleDateString(),
+          endDate: new Date(r.endDate).toLocaleDateString(),
+          reason: r.reason,
+          status: r.status
+        }));
+        setLeaveRequests(mappedRequests);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching leave requests:', error);
@@ -97,105 +116,223 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ user }) => {
 
     fetchDashboardData();
     fetchLeaveRequests();
-  }, []); 
+  }, []);
 
   const handleApprovalChange = (id: number, approve: boolean) => {
+    // Implement API call for approval
     console.log(`Leave request ${id} has been ${approve ? 'approved' : 'rejected'}`);
   };
 
   const handleCommentChange = (id: number, value: string) => {
-    setComments(prevComments => ({
-      ...prevComments,
+    setComments(prev => ({
+      ...prev,
       [id]: value,
     }));
   };
 
-  return (
-    <div style={{ padding: '20px' }}>
-      <h1>Welcome, {user?.fullName || 'User'}!</h1>
+  const roleData = [
+    { name: 'Employees', value: stats.employeeCount },
+    { name: 'Supervisors', value: stats.supervisorCount },
+    { name: 'HR', value: stats.hrCount },
+    { name: 'Admins', value: stats.adminCount },
+  ];
 
-      <div style={{ marginTop: '30px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-        <div style={cardStyle}>
-          <h2>{stats.employeeCount}</h2>
-          <p>Employees</p>
-        </div>
-        <div style={cardStyle}>
-          <h2>{stats.supervisorCount}</h2>
-          <p>Supervisors</p>
-        </div>
-        <div style={cardStyle}>
-          <h2>{stats.hrCount}</h2>
-          <p>HR</p>
-        </div>
-        <div style={cardStyle}>
-          <h2>{stats.adminCount}</h2>
-          <p>Admins</p>
-        </div>
+  const leavesByType = leaveRequests.reduce((acc: any, curr) => {
+    acc[curr.leaveType] = (acc[curr.leaveType] || 0) + 1;
+    return acc;
+  }, {});
+
+  const barChartData = Object.keys(leavesByType).map(key => ({
+    name: key,
+    count: leavesByType[key]
+  }));
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  };
+
+  const displayName = user?.fullName || user?.name || "Admin";
+
+  return (
+    <div className="admin-dashboard">
+      <div className="admin-header">
+        <h1 className="admin-title">Welcome back, {displayName}</h1>
+        <p className="admin-subtitle">Here's what's happening in your organization today.</p>
       </div>
 
-      {/* Leave Requests */}
-      <h2 style={{ marginTop: '40px' }}>Pending Leave Requests</h2>
+      <motion.div
+        className="admin-stats-grid"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div className="admin-stat-card" variants={itemVariants}>
+          <div className="admin-stat-icon-wrapper" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+            <FaUsers />
+          </div>
+          <div className="admin-stat-content">
+            <div className="admin-stat-value">{stats.employeeCount}</div>
+            <div className="admin-stat-label">Total Employees</div>
+          </div>
+        </motion.div>
+        
+        <motion.div className="admin-stat-card" variants={itemVariants}>
+          <div className="admin-stat-icon-wrapper" style={{ background: '#d1fae5', color: '#059669' }}>
+            <FaUserTie />
+          </div>
+          <div className="admin-stat-content">
+            <div className="admin-stat-value">{stats.supervisorCount}</div>
+            <div className="admin-stat-label">Supervisors</div>
+          </div>
+        </motion.div>
 
-      {loading ? (
-        <p>Loading leave requests...</p>
-      ) : leaveRequests.filter(leave => leave.status === 'PENDING').length === 0 ? (
-        <p>No pending leave requests.</p>
-      ) : (
-        leaveRequests
-          .filter(leave => leave.status === 'PENDING')
-          .map((leave) => (
-            <motion.div
-              key={leave.id}
-              className="leave-request-card"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-              style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f0f2f5', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
-            >
-              <h4>{leave.employeeName}</h4>
-              <p><strong>Type:</strong> {leave.leaveType}</p>
-              <p><strong>Dates:</strong> {leave.startDate} to {leave.endDate}</p>
-              <p><strong>Reason:</strong> {leave.reason}</p>
+        <motion.div className="admin-stat-card" variants={itemVariants}>
+          <div className="admin-stat-icon-wrapper" style={{ background: '#fef3c7', color: '#d97706' }}>
+            <FaUserCog />
+          </div>
+          <div className="admin-stat-content">
+            <div className="admin-stat-value">{stats.hrCount}</div>
+            <div className="admin-stat-label">HR Personnel</div>
+          </div>
+        </motion.div>
 
-              <div style={{ marginTop: '10px' }}>
-                <textarea
-                  placeholder="Add a comment (optional)"
-                  value={comments[leave.id] || ''}
-                  onChange={(e) => handleCommentChange(leave.id, e.target.value)}
-                  style={{ width: '100%', minHeight: '60px', borderRadius: '6px', padding: '8px' }}
-                />
-              </div>
+        <motion.div className="admin-stat-card" variants={itemVariants}>
+          <div className="admin-stat-icon-wrapper" style={{ background: '#fee2e2', color: '#dc2626' }}>
+            <FaUserShield />
+          </div>
+          <div className="admin-stat-content">
+            <div className="admin-stat-value">{stats.adminCount}</div>
+            <div className="admin-stat-label">System Admins</div>
+          </div>
+        </motion.div>
+      </motion.div>
 
-              <div className="action-buttons" style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
-                <button
-                  className="approve-button"
-                  onClick={() => handleApprovalChange(leave.id, true)}
-                  style={{ backgroundColor: '#1890ff' }}
+      <div className="admin-charts-grid">
+        <motion.div className="admin-chart-card" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+          <h3 className="admin-chart-title">System Roles Distribution</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={roleData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  paddingAngle={5}
+                  dataKey="value"
                 >
-                  Approve
-                </button>
-                <button
-                  className="reject-button"
-                  onClick={() => handleApprovalChange(leave.id, false)}
-                  style={{ backgroundColor: '#1890ff' }}
-                >
-                  Reject
-                </button>
-              </div>
-            </motion.div>
-          ))
-      )}
+                  {roleData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        <motion.div className="admin-chart-card" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
+          <h3 className="admin-chart-title">Leave Requests by Type</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart
+                data={barChartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} />
+                <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                  {barChartData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      </div>
+
+      <motion.div 
+        className="admin-requests-section"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <h2 className="admin-requests-title">Pending Leave Requests</h2>
+        {loading ? (
+          <p>Loading leave requests...</p>
+        ) : leaveRequests.filter(leave => leave.status === 'PENDING').length === 0 ? (
+          <p>No pending leave requests at the moment.</p>
+        ) : (
+          <div className="admin-request-grid">
+            {leaveRequests
+              .filter(leave => leave.status === 'PENDING')
+              .map((leave) => (
+                <div key={leave.id} className="admin-request-card">
+                  <div className="admin-request-header">
+                    <h4 className="admin-request-name">{leave.employeeName}</h4>
+                    <span className="admin-request-type">{leave.leaveType}</span>
+                  </div>
+                  
+                  <div className="admin-request-dates">
+                    <strong>Dates:</strong> {leave.startDate} to {leave.endDate}
+                  </div>
+                  
+                  <div className="admin-request-reason">
+                    <strong>Reason:</strong> {leave.reason || 'No reason provided.'}
+                  </div>
+
+                  <textarea
+                    className="admin-textarea"
+                    placeholder="Add a comment (optional)"
+                    value={comments[leave.id] || ''}
+                    onChange={(e) => handleCommentChange(leave.id, e.target.value)}
+                  />
+
+                  <div className="admin-request-actions">
+                    <button
+                      className="admin-btn admin-btn-approve"
+                      onClick={() => handleApprovalChange(leave.id, true)}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      className="admin-btn admin-btn-reject"
+                      onClick={() => handleApprovalChange(leave.id, false)}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </motion.div>
     </div>
   );
 };
 
-const cardStyle: React.CSSProperties = {
-  flex: '1',
-  minWidth: '200px',
-  padding: '20px',
-  backgroundColor: '#f0f2f5',
-  borderRadius: '8px',
-  textAlign: 'center',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-};
-
-export default DashboardContent;
+export default AdminDashboardContent;

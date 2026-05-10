@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Layout, Button, Tooltip, Dropdown } from "antd";
+import { Layout, Button, Tooltip, Dropdown, Badge, Modal, List, Avatar, Tag } from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   CloseOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { IoMdNotificationsOutline } from "react-icons/io";
+import { HiOutlineUserGroup } from "react-icons/hi";
 import { CiSettings } from "react-icons/ci";
 import { FaUserCircle } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
@@ -13,14 +16,17 @@ import { BsCalendarCheck, BsClipboard2Check } from "react-icons/bs";
 import { IoBookOutline } from "react-icons/io5";
 import { BiDownload } from "react-icons/bi";
 import AdminDashboardContent from "../components/AdminDashboardContent";
+import HrDashboardContent from "../components/HrDashboardContent";
 import "../css/LayoutDashboard.css";
 import UserManagement from "./UserManagement";
+import DepartmentManagement from "./DepartmentManagement";
 import SupervisorDashboardContent from "./SupervisorDashboardContent";
 import StaffDashboardContent from "./StaffDashboardContent";
 import LeaveRequest from "./LeaveRequest";
 import ExportLeaveReports from "./ExportLeaveReports";
 import Notifications from "./Notifications";
 import Settings from "./Settings";
+import { API_BASE_URL } from "../config/api";
 import { clearAuth, getAuth, getDashboardRouteForRole } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 import UserProfile from "./UserProfile";
@@ -47,12 +53,55 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   const [activeKey, setActiveKey] = useState<string>("dashboard");
 
   const [authTick, setAuthTick] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotifModalVisible, setIsNotifModalVisible] = useState(false);
 
   useEffect(() => {
     const onAuthRefresh = () => setAuthTick((t) => t + 1);
     window.addEventListener("slm-auth-updated", onAuthRefresh);
     return () => window.removeEventListener("slm-auth-updated", onAuthRefresh);
   }, []);
+
+  const fetchNotifications = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setNotifications(data.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+    return () => clearInterval(interval);
+  }, [authTick]);
+
+  const markAsRead = async (id: string) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to mark notification as read", error);
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const getUserFromToken = () => {
     const savedUser = getAuth()?.user as {
@@ -96,13 +145,14 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
   };
 
   const getDashboardContent = (role: string) => {
+    const onNavigate = (key: string) => setActiveKey(key);
     switch (role) {
       case "ADMIN":
         return <AdminDashboardContent user={user} />;
       case "SUPERVISOR":
         return <SupervisorDashboardContent user={user} view="dashboard" />;
       case "HR":
-        return <AdminDashboardContent user={user} />;
+        return <HrDashboardContent user={user} onNavigate={onNavigate} />;
       case "EMPLOYEE":
         return <StaffDashboardContent user={user} />;
       default:
@@ -168,6 +218,12 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         content: <UserManagement />,
       },
       {
+        key: "departments",
+        label: "Departments",
+        icon: <HiOutlineUserGroup size={20} />,
+        content: <DepartmentManagement />,
+      },
+      {
         key: "export",
         label: "Export Reports",
         icon: <BiDownload size={20} />,
@@ -219,6 +275,12 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
         label: "User Management",
         icon: <FaUserCircle size={20} />,
         content: <UserManagement />,
+      },
+      {
+        key: "departments",
+        label: "Departments",
+        icon: <HiOutlineUserGroup size={20} />,
+        content: <DepartmentManagement />,
       },
       {
         key: "export",
@@ -400,6 +462,17 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
           </div>
 
           <div className="right-section">
+            <Tooltip title="Notifications">
+              <Badge count={unreadCount > 9 ? "9+" : unreadCount} offset={[-2, 8]}>
+                <Button
+                  type="text"
+                  icon={<IoMdNotificationsOutline size={22} />}
+                  onClick={() => setIsNotifModalVisible(true)}
+                  className="notification-trigger"
+                />
+              </Badge>
+            </Tooltip>
+
             <Dropdown
               menu={{ items: userMenuItems }}
               trigger={["hover"]}
@@ -439,6 +512,61 @@ const LayoutDashboard: React.FC<LayoutDashboardProps> = ({ role }) => {
           </div>
         </Content>
       </Layout>
+
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IoMdNotificationsOutline size={20} />
+            <span>Notifications</span>
+          </div>
+        }
+        open={isNotifModalVisible}
+        onCancel={() => setIsNotifModalVisible(false)}
+        footer={null}
+        width={450}
+        bodyStyle={{ maxHeight: '60vh', overflowY: 'auto' }}
+      >
+        <List
+          dataSource={notifications}
+          renderItem={(item) => (
+            <List.Item
+              key={item._id}
+              actions={[
+                !item.read && (
+                  <Button type="link" size="small" onClick={() => markAsRead(item._id)}>
+                    Mark as read
+                  </Button>
+                ),
+              ]}
+              className={item.read ? "notif-item-read" : "notif-item-unread"}
+            >
+              <List.Item.Meta
+                avatar={
+                  <Avatar 
+                    icon={item.type === 'action_needed' ? <ClockCircleOutlined /> : <CheckCircleOutlined />} 
+                    style={{ backgroundColor: item.read ? '#f5f5f5' : '#e6f7ff', color: item.read ? '#bfbfbf' : '#1890ff' }}
+                  />
+                }
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: item.read ? 400 : 600 }}>{item.title}</span>
+                    {!item.read && <Tag color="blue" style={{ marginRight: 0 }}>New</Tag>}
+                  </div>
+                }
+                description={
+                  <div>
+                    <div style={{ color: '#595959', marginBottom: '4px' }}>{item.body}</div>
+                    <div style={{ fontSize: '11px', color: '#8c8c8c' }}>
+                      {new Date(item.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                }
+              />
+            </List.Item>
+          )}
+          locale={{ emptyText: 'No notifications found' }}
+        />
+      </Modal>
     </Layout>
   );
 };

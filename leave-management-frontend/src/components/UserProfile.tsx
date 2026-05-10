@@ -147,7 +147,7 @@ const UserProfile: React.FC<UserProfileProps> = ({
 
       const payload = await response.json();
       const updatedUser = (payload?.data ?? payload?.user ?? payload) as Record<string, unknown>;
-      saveAuth(token, updatedUser as User);
+      saveAuth(token, updatedUser as unknown as User);
       const ro = mapUserToReadOnly(updatedUser);
       setReadOnly(ro);
       setFullNameEdit(ro.fullName || ro.name);

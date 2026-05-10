@@ -29,7 +29,11 @@ const UserManagement: React.FC = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        setUsers(data);
+        const normalizedUsers = (data.data || data).map((u: any) => ({
+          ...u,
+          id: u.id || u._id
+        }));
+        setUsers(normalizedUsers);
       } else {
         addToast(data.message || 'Failed to fetch users', 'error');
       }
